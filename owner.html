@@ -117,22 +117,16 @@ main { padding-block: 20px 48px; display: grid; gap: 18px; }
 <div class="wrap">
   <section class="signin" id="setup" hidden>
     <h1>Finish setup first</h1>
-    <p>This page needs your Supabase project details in <b>config.js</b>. Follow the setup steps in the README, then reload this page.</p>
+    <p>This page needs your Google booking script link in <b>config.js</b>. Follow the setup steps in the README, then reload this page.</p>
   </section>
 
-  <form class="signin" id="signin" hidden novalidate>
+  <form class="signin" id="passin" hidden novalidate>
     <h1>Owner sign-in</h1>
-    <p>Enter your email and we'll send you a sign-in link. No password needed.</p>
-    <div class="field"><label for="email">Email</label><input id="email" type="email" autocomplete="email" placeholder="you@example.com" required></div>
-    <button class="btn" type="submit" id="send">Email me a sign-in link</button>
-    <div class="msg" id="signin-msg" hidden></div>
+    <p>Enter the owner passcode you set in the Google booking script.</p>
+    <div class="field"><label for="passcode">Passcode</label><input id="passcode" type="password" autocomplete="current-password" required></div>
+    <button class="btn" type="submit" id="pass-go">Sign in</button>
+    <div class="msg err" id="pass-msg" hidden></div>
   </form>
-
-  <section class="signin" id="notowner" hidden>
-    <h1>This email isn't the owner</h1>
-    <p id="notowner-text">Only the owner email listed in the database can see appointments.</p>
-    <button class="btn ghost" type="button" data-signout>Sign out</button>
-  </section>
 
   <main id="dash" hidden>
     <div class="stats">
@@ -155,57 +149,71 @@ main { padding-block: 20px 48px; display: grid; gap: 18px; }
   </main>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="config.js"></script>
 <script>
 (function () {
   const CFG = window.GILMORE_CONFIG || {};
   const $ = id => document.getElementById(id);
-  const show = id => ["setup", "signin", "notowner", "dash"].forEach(x => { $(x).hidden = x !== id; });
+  const show = id => ["setup", "passin", "dash"].forEach(x => { $(x).hidden = x !== id; });
   const esc = t => String(t ?? "").replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
   const fmtTime = d => d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
   const fmtDay = d => d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
   const dayKey = d => d.toDateString();
   const FREQ = { once: "One-time", weekly: "Weekly", biweekly: "Every 2 weeks", monthly: "Monthly" };
 
-  if (!CFG.supabaseUrl || !CFG.supabaseAnonKey || !window.supabase) { show("setup"); return; }
-  const sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey);
+  const GS = CFG.googleScriptUrl || "";
+  if (!GS) { show("setup"); return; }
 
   let rows = [], tab = "upcoming", confirmId = null, timer = null;
 
+  // ----- Google Sheets backend: passcode sign-in -----
+  const PASS = "gilmore.owner.passcode";
+  let passcode = "";
+  try { passcode = sessionStorage.getItem(PASS) || ""; } catch (e) {}
+  async function gs(action, payload) {
+    try {
+      const r = await fetch(GS, { method: "POST", body: JSON.stringify(Object.assign({ action, passcode }, payload)) });
+      const j = await r.json();
+      return j.error ? { data: null, error: j.error } : { data: j.data, error: null };
+    } catch (e) { return { data: null, error: { message: "Couldn't reach the booking system." } }; }
+  }
+  const api = {
+    list: since => gs("owner_list", { since }),
+    setStatus: (id, status) => gs("owner_status", { id, status })
+  };
+
   // ----- sign-in -----
-  $("signin").addEventListener("submit", async ev => {
+  $("passin").addEventListener("submit", async ev => {
     ev.preventDefault();
-    const email = $("email").value.trim(), msg = $("signin-msg");
-    if (!/^\S+@\S+\.\S+$/.test(email)) { msg.hidden = false; msg.className = "msg err"; msg.textContent = "Enter a valid email address."; return; }
-    $("send").disabled = true; $("send").textContent = "Sending…";
-    const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.href.split("#")[0] } });
-    $("send").disabled = false; $("send").textContent = "Email me a sign-in link";
-    msg.hidden = false;
-    if (error) { msg.className = "msg err"; msg.textContent = error.message; }
-    else { msg.className = "msg"; msg.textContent = `Check ${email} for a sign-in link. Open it on this device.`; }
+    passcode = $("passcode").value;
+    $("pass-go").disabled = true;
+    const { error } = await gs("owner_check", {});
+    $("pass-go").disabled = false;
+    if (error) { $("pass-msg").hidden = false; $("pass-msg").textContent = error.code === "auth" ? "That passcode isn't right." : error.message; return; }
+    try { sessionStorage.setItem(PASS, passcode); } catch (e) {}
+    $("pass-msg").hidden = true; $("passcode").value = "";
+    enterDash();
   });
-
-  async function signOut() { await sb.auth.signOut(); clearInterval(timer); rows = []; $("top-actions").hidden = true; show("signin"); }
-  $("signout").addEventListener("click", signOut);
-  document.querySelector("[data-signout]").addEventListener("click", signOut);
-
-  async function enter(session) {
-    if (!session) { $("top-actions").hidden = true; show("signin"); return; }
-    $("top-actions").hidden = false;
-    const { data: isOwner, error } = await sb.rpc("is_owner");
-    if (error || !isOwner) { $("notowner-text").textContent = `${session.user.email} isn't listed as the owner. Sign in with the owner email, or add this email to the owners table in Supabase.`; show("notowner"); return; }
-    show("dash");
+  async function enterDash() {
+    $("top-actions").hidden = false; show("dash");
     await load();
     clearInterval(timer); timer = setInterval(load, 60000);
   }
 
-  sb.auth.onAuthStateChange((_e, session) => { enter(session); });
+  async function signOut() {
+    clearInterval(timer); rows = []; $("top-actions").hidden = true;
+    passcode = ""; try { sessionStorage.removeItem(PASS); } catch (e) {}
+    show("passin");
+  }
+  $("signout").addEventListener("click", signOut);
+
+  if (passcode) gs("owner_check", {}).then(({ error }) => error ? show("passin") : enterDash());
+  else show("passin");
 
   // ----- data -----
   async function load() {
     const since = new Date(); since.setDate(since.getDate() - 90);
-    const { data, error } = await sb.from("appointments").select("*").gte("start_at", since.toISOString()).order("start_at");
+    const { data, error } = await api.list(since.toISOString());
     const err = $("dash-err");
     if (error) { err.hidden = false; err.textContent = "Couldn't load appointments: " + error.message; return; }
     err.hidden = true;
@@ -215,7 +223,7 @@ main { padding-block: 20px 48px; display: grid; gap: 18px; }
   }
 
   async function setStatus(id, status) {
-    const { error } = await sb.from("appointments").update({ status, updated_at: new Date().toISOString() }).eq("id", id);
+    const { error } = await api.setStatus(id, status);
     if (error) { $("dash-err").hidden = false; $("dash-err").textContent = error.message; return; }
     confirmId = null; await load();
   }

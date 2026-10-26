@@ -535,7 +535,6 @@ img { max-width: 100%; }
 
 <div id="sheet-root"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="config.js"></script>
 <script>
 (function () {
@@ -621,17 +620,34 @@ img { max-width: 100%; }
   let appts = load(STORE, []);
   const persist = () => { save(STORE, appts); renderBadges(); };
 
-  // ---------- live backend (Supabase) ----------
-  // With config.js filled in, bookings go to the shared database and the owner is emailed.
+  // ---------- live backend (Google Sheets) ----------
+  // With config.js filled in, bookings go to the owner's Google Sheet and the owner is emailed from Gmail.
   // Without it, the app runs in demo mode and bookings stay in this browser.
   const CFG = window.GILMORE_CONFIG || {};
-  const sb = CFG.supabaseUrl && CFG.supabaseAnonKey && window.supabase ? window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey) : null;
-  const LIVE = !!sb;
+  const GS = CFG.googleScriptUrl || "";
+  const LIVE = !!GS;
+  // Google Sheets backend: plain-text POST keeps it a simple cross-site request.
+  async function gs(action, payload) {
+    try {
+      const r = await fetch(GS, { method: "POST", body: JSON.stringify(Object.assign({ action }, payload)) });
+      const j = await r.json();
+      return j.error ? { data: null, error: j.error } : { data: j.data, error: null };
+    } catch (e) {
+      return { data: null, error: { message: "Couldn't reach the booking system. Check your connection and try again." } };
+    }
+  }
+  const api = {
+    busy: (from, to) => gs("busy", { from, to }),
+    book: p => gs("book", { p }),
+    lookup: (refs, phone) => gs("lookup", { refs, phone }),
+    cancel: (ref, phone) => gs("cancel", { ref, phone }),
+    reschedule: (ref, phone, start) => gs("reschedule", { ref, phone, start })
+  };
   let remoteBusy = [];  // [startMs, endMs] of every booked appointment, no customer details
   async function loadBusy() {
     if (!LIVE) return;
     const from = new Date(), to = addDays(from, MAX_DAYS + 7);
-    const { data, error } = await sb.rpc("busy_times", { p_from: from.toISOString(), p_to: to.toISOString() });
+    const { data, error } = await api.busy(from.toISOString(), to.toISOString());
     if (error) { console.error(error); return; }
     remoteBusy = data.map(r => [new Date(r.start_at).getTime(), new Date(r.end_at).getTime()]);
     renderBadges();
@@ -639,19 +655,6 @@ img { max-width: 100%; }
   }
   const isTaken = e => e && (e.code === "23P01" || /no_double_booking/.test(e.message || ""));
 
-  function notifyOwner(kind, a) {
-    if (!CFG.web3formsKey) return;
-    const st = new Date(a.start), end = new Date(st.getTime() + a.dur * 60000);
-    const when = `${fmtDay(st, true)}, ${fmtTime(st)} – ${fmtTime(end)}`;
-    const subject = { new: "New booking", reschedule: "Booking moved", cancel: "Booking cancelled" }[kind] + `: ${a.service} on ${fmtDay(st)} ${fmtTime(st)}`;
-    fetch("https://api.web3forms.com/submit", {
-      method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({ access_key: CFG.web3formsKey, subject, from_name: "Gilmore Booking App",
-        "Confirmation code": a.ref, Service: a.service, Option: a.option + (a.addons && a.addons.length ? " + " + a.addons.join(", ") : ""),
-        When: when, Frequency: (FREQS.find(f => f[0] === a.freq) || [0, "One-time"])[1], Price: a.price,
-        Customer: a.contact.name, Phone: a.contact.phone, Email: a.contact.email || "—", Address: a.contact.address, Notes: a.contact.notes || "—" })
-    }).catch(err => console.error("Email failed", err));
-  }
 
   // ---------- availability ----------
   // A slot is open when it starts at least an hour from now, fits before closing, and doesn't overlap a booked appointment.
@@ -710,7 +713,7 @@ img { max-width: 100%; }
   const root = document.getElementById("sheet-root");
   let state = null;   // booking flow
   let view = null;    // "mine" | "pick" when a list sheet is open
-  let mineTab = "upcoming", confirmCancel = null;
+  let mineTab = "upcoming", confirmCancel = null, mineError = null;
 
   function openSheet(html, fresh, labelId) {
     root.innerHTML = `<div class="scrim${fresh ? " anim" : ""}" data-scrim><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="${labelId}">${html}</div></div>`;
@@ -906,11 +909,11 @@ img { max-width: 100%; }
     if (LIVE) {
       busyButton("Booking…");
       const end = new Date(s.slot.getTime() + o.dur * 60000);
-      const { data, error } = await sb.rpc("book_appointment", { p: {
+      const { data, error } = await api.book({
         service_key: s.svcKey, service: a.service, option_id: s.optId, option_label: a.option, addons: a.addons,
         frequency: s.freq, price_label: a.price, is_quote: a.quote, start_at: a.start, end_at: end.toISOString(),
         customer_name: a.contact.name, customer_phone: a.contact.phone, customer_email: a.contact.email,
-        address: a.contact.address, notes: a.contact.notes } });
+        address: a.contact.address, notes: a.contact.notes });
       if (error) {
         if (isTaken(error)) { slotTaken(); return; }
         s.submitError = error.message || "Something went wrong. Please try again."; render(); return;
@@ -920,7 +923,7 @@ img { max-width: 100%; }
     } else {
       a.ref = "GCS-" + Math.random().toString(36).slice(2, 7).toUpperCase();
     }
-    appts.unshift(a); persist(); notifyOwner("new", a);
+    appts.unshift(a); persist();
     s.ref = a.ref; s.submitError = null; s.step = 4; render();
     const b = root.querySelector(".sheet-body"); b && (b.scrollTop = 0);
   }
@@ -930,7 +933,7 @@ img { max-width: 100%; }
     if (!a || !s.slot) return;
     if (LIVE) {
       busyButton("Saving…");
-      const { data, error } = await sb.rpc("customer_reschedule", { p_ref: a.ref, p_phone: a.contact.phone, p_start: s.slot.toISOString() });
+      const { data, error } = await api.reschedule(a.ref, a.contact.phone, s.slot.toISOString());
       if (error || !data) {
         if (isTaken(error)) { slotTaken(); return; }
         s.submitError = (error && error.message) || "This appointment can no longer be changed. Call us to reschedule."; render(); return;
@@ -938,19 +941,20 @@ img { max-width: 100%; }
       loadBusy();
     }
     a.start = s.slot.toISOString(); a.rescheduled = Date.now();
-    persist(); notifyOwner("reschedule", a);
+    persist();
     s.ref = a.ref; s.rescheduled = true; s.reschedule = null; s.submitError = null; s.step = 4; render();
   }
 
   async function cancelAppt(ref) {
     const a = appts.find(x => x.ref === ref); if (!a) return;
     if (LIVE) {
-      const { error } = await sb.rpc("customer_cancel", { p_ref: a.ref, p_phone: a.contact.phone });
-      if (error) { console.error(error); return; }
+      const { error } = await api.cancel(a.ref, a.contact.phone);
+      if (error) { mineError = error.message || "Couldn't cancel. Please call us."; confirmCancel = null; showMine(); return; }
       loadBusy();
     }
+    mineError = null;
     a.status = "cancelled"; a.cancelled = Date.now();
-    confirmCancel = null; persist(); notifyOwner("cancel", a); showMine();
+    confirmCancel = null; persist(); showMine();
   }
 
   // Pull the latest status of this device's appointments (the owner may have moved, completed or cancelled them).
@@ -960,7 +964,7 @@ img { max-width: 100%; }
     appts.forEach(a => { (byPhone[a.contact.phone] = byPhone[a.contact.phone] || []).push(a.ref); });
     let changed = false;
     for (const [phone, refs] of Object.entries(byPhone)) {
-      const { data, error } = await sb.rpc("customer_appointments", { p_refs: refs, p_phone: phone });
+      const { data, error } = await api.lookup(refs, phone);
       if (error) continue;
       data.forEach(r => {
         const a = appts.find(x => x.ref === r.ref); if (!a) return;
@@ -1005,7 +1009,7 @@ img { max-width: 100%; }
     openSheet(`<div class="sheet-head"><div class="row"><h2 id="mine-title">My appointments</h2><button class="x" data-nav="close" aria-label="Close" type="button">×</button></div>
       <div class="tabs" role="tablist"><button type="button" role="tab" class="${mineTab === "upcoming" ? "on" : ""}" data-tab="upcoming" aria-selected="${mineTab === "upcoming"}">Upcoming (${up.length})</button>
       <button type="button" role="tab" class="${mineTab === "past" ? "on" : ""}" data-tab="past" aria-selected="${mineTab === "past"}">Past &amp; cancelled</button></div></div>
-      <div class="sheet-body"><div class="mylist">${items}</div><span class="hint">${LIVE ? "Showing appointments booked from this device." : "Appointments are saved on this device."}</span></div>`, fresh, "mine-title");
+      <div class="sheet-body">${mineError ? `<div class="note" style="background:var(--red-soft)">${esc(mineError)}</div>` : ""}<div class="mylist">${items}</div><span class="hint">${LIVE ? "Showing appointments booked from this device." : "Appointments are saved on this device."}</span></div>`, fresh, "mine-title");
   }
 
   function showPicker(fresh) {
