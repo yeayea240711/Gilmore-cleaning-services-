@@ -1,3 +1,9 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Book lawn care, house cleaning, windows, car detailing, pressure washing, trash can and pet waste services with Gilmore Cleaning Services.">
 <title>Gilmore Cleaning Services</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -321,6 +327,14 @@ footer.site a { color: var(--blue); font-weight: 600; text-decoration: none; }
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .scrim.anim, .scrim.anim .sheet { animation: none; } .btn { transition: none; } }
 </style>
+<style>
+html, body { margin: 0; }
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
 
 <header class="top">
   <div class="wrap">
@@ -515,11 +529,14 @@ footer.site a { color: var(--blue); font-weight: 600; text-decoration: none; }
     <b style="color:var(--fg)">Gilmore Cleaning Services</b>
     <span>Follow our work on Instagram: <a href="https://www.instagram.com/motivational_dezzy/" target="_blank" rel="noopener">@motivational_dezzy</a></span>
     <span>Prices shown are starting rates. Final pricing is confirmed before work begins.</span>
+    <span><a href="owner.html">Owner sign-in</a></span>
   </footer>
 </main>
 
 <div id="sheet-root"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
 <script>
 (function () {
   const money = n => "$" + n.toFixed(2);
@@ -604,13 +621,49 @@ footer.site a { color: var(--blue); font-weight: 600; text-decoration: none; }
   let appts = load(STORE, []);
   const persist = () => { save(STORE, appts); renderBadges(); };
 
+  // ---------- live backend (Supabase) ----------
+  // With config.js filled in, bookings go to the shared database and the owner is emailed.
+  // Without it, the app runs in demo mode and bookings stay in this browser.
+  const CFG = window.GILMORE_CONFIG || {};
+  const sb = CFG.supabaseUrl && CFG.supabaseAnonKey && window.supabase ? window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey) : null;
+  const LIVE = !!sb;
+  let remoteBusy = [];  // [startMs, endMs] of every booked appointment, no customer details
+  async function loadBusy() {
+    if (!LIVE) return;
+    const from = new Date(), to = addDays(from, MAX_DAYS + 7);
+    const { data, error } = await sb.rpc("busy_times", { p_from: from.toISOString(), p_to: to.toISOString() });
+    if (error) { console.error(error); return; }
+    remoteBusy = data.map(r => [new Date(r.start_at).getTime(), new Date(r.end_at).getTime()]);
+    renderBadges();
+    if (state && state.step === 1) render();
+  }
+  const isTaken = e => e && (e.code === "23P01" || /no_double_booking/.test(e.message || ""));
+
+  function notifyOwner(kind, a) {
+    if (!CFG.web3formsKey) return;
+    const st = new Date(a.start), end = new Date(st.getTime() + a.dur * 60000);
+    const when = `${fmtDay(st, true)}, ${fmtTime(st)} – ${fmtTime(end)}`;
+    const subject = { new: "New booking", reschedule: "Booking moved", cancel: "Booking cancelled" }[kind] + `: ${a.service} on ${fmtDay(st)} ${fmtTime(st)}`;
+    fetch("https://api.web3forms.com/submit", {
+      method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ access_key: CFG.web3formsKey, subject, from_name: "Gilmore Booking App",
+        "Confirmation code": a.ref, Service: a.service, Option: a.option + (a.addons && a.addons.length ? " + " + a.addons.join(", ") : ""),
+        When: when, Frequency: (FREQS.find(f => f[0] === a.freq) || [0, "One-time"])[1], Price: a.price,
+        Customer: a.contact.name, Phone: a.contact.phone, Email: a.contact.email || "—", Address: a.contact.address, Notes: a.contact.notes || "—" })
+    }).catch(err => console.error("Email failed", err));
+  }
+
   // ---------- availability ----------
   // A slot is open when it starts at least an hour from now, fits before closing, and doesn't overlap a booked appointment.
   function slotsFor(day, dur, ignoreRef) {
     if (isClosedDay(day)) return [];
     const earliest = Date.now() + LEAD_MIN * 60000;
-    const busy = appts.filter(a => a.status === "booked" && a.ref !== ignoreRef)
-      .map(a => [new Date(a.start).getTime(), new Date(a.start).getTime() + a.dur * 60000]);
+    const own = ignoreRef && appts.find(a => a.ref === ignoreRef);
+    const ownStart = own ? new Date(own.start).getTime() : null;
+    const busy = LIVE
+      ? remoteBusy.filter(([b0]) => b0 !== ownStart)
+      : appts.filter(a => a.status === "booked" && a.ref !== ignoreRef)
+        .map(a => [new Date(a.start).getTime(), new Date(a.start).getTime() + a.dur * 60000]);
     const out = [];
     for (let m = OPEN_MIN; m + dur <= CLOSE_MIN; m += STEP) {
       const s = dayStart(day); s.setMinutes(m);
@@ -684,6 +737,7 @@ footer.site a { color: var(--blue); font-weight: 600; text-decoration: none; }
     state = { svcKey: a.svcKey, svc, step: 1, optId: a.optId, qty: a.qty, addons: a.addonIds || [], freq: a.freq, day: null, slot: null,
       weekStart: mondayOf(new Date(a.start) > new Date() ? new Date(a.start) : new Date()), contact: a.contact, errors: {}, reschedule: ref };
     render(false);
+    loadBusy();
   }
 
   const currentOpt = () => state.svc.options.find(o => o.id === state.optId);
@@ -759,8 +813,10 @@ footer.site a { color: var(--blue); font-weight: 600; text-decoration: none; }
           ${s.freq !== "once" ? `<span class="hint">Recurring visits are billed per visit at the price shown. You pick the first visit next.</span>` : ""}</div>`;
       }
     } else if (s.step === 1) {
+      body += s.takenNote ? `<div class="note" style="background:var(--red-soft)">Sorry, someone just booked that time. Please pick another.</div>` : "";
       body += s.reschedule ? `<div class="note">Pick a new time for your ${esc(svc.name.toLowerCase())}. Your current slot stays held until you save.</div>` : "";
       body += timeStep();
+      if (s.reschedule && s.submitError) body += `<div class="note" style="background:var(--red-soft)">${esc(s.submitError)}</div>`;
     } else if (s.step === 2) {
       const c = s.contact, e = s.errors;
       const f = (id, label, type, ph, extra = "") => `<div class="field"><label for="f-${id}">${label}</label>
@@ -781,6 +837,7 @@ footer.site a { color: var(--blue); font-weight: 600; text-decoration: none; }
         <div class="r"><span>Address</span><b>${esc(s.contact.address)}</b></div>
         <div class="r tot"><span>${svc.quote ? "Estimated range" : p.estimate ? "Starting price" : "Total"}</span><b class="num">${p.label}</b></div>
       </div>
+      ${s.submitError ? `<div class="note" style="background:var(--red-soft)">${esc(s.submitError)}</div>` : ""}
       <span class="hint">No payment is taken now. You pay after the job is done. Free to cancel or reschedule from My appointments.</span>`;
     } else if (s.step === 4) {
       const a = appts.find(x => x.ref === s.ref);
@@ -824,26 +881,94 @@ footer.site a { color: var(--blue); font-weight: 600; text-decoration: none; }
     if (s.step === 1 && !s.slot) return;
     if (s.step === 2 && !validate()) { render(); const first = root.querySelector(".err"); first && first.previousElementSibling.focus(); return; }
     if (s.step === 2) save(CONTACT, { name: s.contact.name, phone: s.contact.phone, email: s.contact.email, address: s.contact.address });
-    if (s.step === 3) {
-      // Re-check the slot in case it was taken in another tab.
-      if (!slotsFor(s.slot, currentDur()).some(t => t.getTime() === s.slot.getTime())) { s.step = 1; s.slot = null; render(); return; }
-      const o = currentOpt(), p = pricing();
-      s.ref = "GCS-" + Math.random().toString(36).slice(2, 7).toUpperCase();
-      appts.unshift({ ref: s.ref, svcKey: s.svcKey, optId: s.optId, service: s.svc.name, option: o.label + (o.unit ? ` × ${s.qty}` : ""),
-        qty: s.qty, addonIds: s.addons, addons: p.addons.map(a => a.label), freq: s.freq, start: s.slot.toISOString(), dur: o.dur,
-        price: p.label, quote: !!s.svc.quote, contact: Object.assign({}, s.contact), status: "booked", made: Date.now() });
-      persist();
-    }
+    if (s.step === 3) { confirmBooking(); return; }
     s.step++; s.errors = {}; render();
+    if (s.step === 1) loadBusy();
     const b = root.querySelector(".sheet-body"); b && (b.scrollTop = 0);
   }
 
-  function saveReschedule() {
+  function busyButton(label) {
+    const b = root.querySelector('[data-nav="next"], [data-nav="save-resched"]');
+    if (b) { b.disabled = true; b.textContent = label; }
+  }
+  function slotTaken() {
+    state.step = 1; state.slot = null; state.takenNote = true;
+    loadBusy().then(render);
+  }
+
+  async function confirmBooking() {
+    const s = state, o = currentOpt(), p = pricing();
+    // Re-check the slot in case it was taken in the meantime.
+    if (!slotsFor(s.slot, o.dur, s.reschedule).some(t => t.getTime() === s.slot.getTime())) { slotTaken(); return; }
+    const a = { svcKey: s.svcKey, optId: s.optId, service: s.svc.name, option: o.label + (o.unit ? ` × ${s.qty}` : ""),
+      qty: s.qty, addonIds: s.addons, addons: p.addons.map(x => x.label), freq: s.freq, start: s.slot.toISOString(), dur: o.dur,
+      price: p.label, quote: !!s.svc.quote, contact: Object.assign({}, s.contact), status: "booked", made: Date.now() };
+    if (LIVE) {
+      busyButton("Booking…");
+      const end = new Date(s.slot.getTime() + o.dur * 60000);
+      const { data, error } = await sb.rpc("book_appointment", { p: {
+        service_key: s.svcKey, service: a.service, option_id: s.optId, option_label: a.option, addons: a.addons,
+        frequency: s.freq, price_label: a.price, is_quote: a.quote, start_at: a.start, end_at: end.toISOString(),
+        customer_name: a.contact.name, customer_phone: a.contact.phone, customer_email: a.contact.email,
+        address: a.contact.address, notes: a.contact.notes } });
+      if (error) {
+        if (isTaken(error)) { slotTaken(); return; }
+        s.submitError = error.message || "Something went wrong. Please try again."; render(); return;
+      }
+      a.ref = data;
+      remoteBusy.push([s.slot.getTime(), end.getTime()]);
+    } else {
+      a.ref = "GCS-" + Math.random().toString(36).slice(2, 7).toUpperCase();
+    }
+    appts.unshift(a); persist(); notifyOwner("new", a);
+    s.ref = a.ref; s.submitError = null; s.step = 4; render();
+    const b = root.querySelector(".sheet-body"); b && (b.scrollTop = 0);
+  }
+
+  async function saveReschedule() {
     const s = state, a = appts.find(x => x.ref === s.reschedule);
     if (!a || !s.slot) return;
+    if (LIVE) {
+      busyButton("Saving…");
+      const { data, error } = await sb.rpc("customer_reschedule", { p_ref: a.ref, p_phone: a.contact.phone, p_start: s.slot.toISOString() });
+      if (error || !data) {
+        if (isTaken(error)) { slotTaken(); return; }
+        s.submitError = (error && error.message) || "This appointment can no longer be changed. Call us to reschedule."; render(); return;
+      }
+      loadBusy();
+    }
     a.start = s.slot.toISOString(); a.rescheduled = Date.now();
-    persist();
-    s.ref = a.ref; s.rescheduled = true; s.reschedule = null; s.step = 4; render();
+    persist(); notifyOwner("reschedule", a);
+    s.ref = a.ref; s.rescheduled = true; s.reschedule = null; s.submitError = null; s.step = 4; render();
+  }
+
+  async function cancelAppt(ref) {
+    const a = appts.find(x => x.ref === ref); if (!a) return;
+    if (LIVE) {
+      const { error } = await sb.rpc("customer_cancel", { p_ref: a.ref, p_phone: a.contact.phone });
+      if (error) { console.error(error); return; }
+      loadBusy();
+    }
+    a.status = "cancelled"; a.cancelled = Date.now();
+    confirmCancel = null; persist(); notifyOwner("cancel", a); showMine();
+  }
+
+  // Pull the latest status of this device's appointments (the owner may have moved, completed or cancelled them).
+  async function syncMine() {
+    if (!LIVE || !appts.length) return;
+    const byPhone = {};
+    appts.forEach(a => { (byPhone[a.contact.phone] = byPhone[a.contact.phone] || []).push(a.ref); });
+    let changed = false;
+    for (const [phone, refs] of Object.entries(byPhone)) {
+      const { data, error } = await sb.rpc("customer_appointments", { p_refs: refs, p_phone: phone });
+      if (error) continue;
+      data.forEach(r => {
+        const a = appts.find(x => x.ref === r.ref); if (!a) return;
+        const st = new Date(r.start_at).toISOString(), status = r.status === "completed" ? "booked" : r.status;
+        if (a.start !== st || a.status !== status) { a.start = st; a.status = status; changed = true; }
+      });
+    }
+    if (changed) { persist(); if (view === "mine") showMine(); }
   }
 
   // ---------- appointments ----------
@@ -880,7 +1005,7 @@ footer.site a { color: var(--blue); font-weight: 600; text-decoration: none; }
     openSheet(`<div class="sheet-head"><div class="row"><h2 id="mine-title">My appointments</h2><button class="x" data-nav="close" aria-label="Close" type="button">×</button></div>
       <div class="tabs" role="tablist"><button type="button" role="tab" class="${mineTab === "upcoming" ? "on" : ""}" data-tab="upcoming" aria-selected="${mineTab === "upcoming"}">Upcoming (${up.length})</button>
       <button type="button" role="tab" class="${mineTab === "past" ? "on" : ""}" data-tab="past" aria-selected="${mineTab === "past"}">Past &amp; cancelled</button></div></div>
-      <div class="sheet-body"><div class="mylist">${items}</div><span class="hint">Appointments are saved on this device.</span></div>`, fresh, "mine-title");
+      <div class="sheet-body"><div class="mylist">${items}</div><span class="hint">${LIVE ? "Showing appointments booked from this device." : "Appointments are saved on this device."}</span></div>`, fresh, "mine-title");
   }
 
   function showPicker(fresh) {
@@ -903,14 +1028,14 @@ footer.site a { color: var(--blue); font-weight: 600; text-decoration: none; }
     const t = ev.target;
     const book = t.closest("[data-book]");
     if (book) { startBooking(book.dataset.book, book.dataset.opt); return; }
-    if (t.closest("#mybook")) { mineTab = "upcoming"; showMine(!isOpen()); return; }
+    if (t.closest("#mybook")) { mineTab = "upcoming"; showMine(!isOpen()); syncMine(); return; }
     const nav = t.closest("[data-nav]");
     if (nav) {
       const a = nav.dataset.nav;
       if (a === "close") close();
       else if (a === "back") { state.step--; render(); }
       else if (a === "next") next();
-      else if (a === "mine") { mineTab = "upcoming"; showMine(!isOpen()); }
+      else if (a === "mine") { mineTab = "upcoming"; showMine(!isOpen()); syncMine(); }
       else if (a === "pick") showPicker(!isOpen());
       else if (a === "save-resched") saveReschedule();
       return;
@@ -920,7 +1045,7 @@ footer.site a { color: var(--blue); font-weight: 600; text-decoration: none; }
     const c1 = t.closest("[data-cancel]"); if (c1) { confirmCancel = c1.dataset.cancel; showMine(); return; }
     if (t.closest("[data-cancel-no]")) { confirmCancel = null; showMine(); return; }
     const c2 = t.closest("[data-cancel-yes]");
-    if (c2) { const a = appts.find(x => x.ref === c2.dataset.cancelYes); if (a) { a.status = "cancelled"; a.cancelled = Date.now(); } confirmCancel = null; persist(); showMine(); return; }
+    if (c2) { c2.disabled = true; c2.textContent = "Cancelling…"; cancelAppt(c2.dataset.cancelYes); return; }
     const rs = t.closest("[data-resched]"); if (rs) { startReschedule(rs.dataset.resched); return; }
     const ag = t.closest("[data-again]");
     if (ag) { const a = appts.find(x => x.ref === ag.dataset.again); if (a) startBooking(a.svcKey, a.optId, a); return; }
@@ -931,7 +1056,7 @@ footer.site a { color: var(--blue); font-weight: 600; text-decoration: none; }
     const wk = t.closest("[data-week]");
     if (wk) { state.weekStart = addDays(state.weekStart, 7 * +wk.dataset.week); state.day = null; state.slot = null; render(); return; }
     const dy = t.closest("[data-day]"); if (dy) { state.day = new Date(dy.dataset.day); state.slot = null; render(); return; }
-    const sl = t.closest("[data-slot]"); if (sl) { state.slot = new Date(sl.dataset.slot); render(); return; }
+    const sl = t.closest("[data-slot]"); if (sl) { state.slot = new Date(sl.dataset.slot); state.takenNote = false; render(); return; }
   });
   document.addEventListener("change", ev => {
     if (!state) return;
@@ -958,6 +1083,9 @@ footer.site a { color: var(--blue); font-weight: 600; text-decoration: none; }
   else if (location.hash === "#appointments") showMine(true);
 
   renderBadges();
-  setInterval(renderBadges, 60000);
+  loadBusy();
+  setInterval(() => { renderBadges(); loadBusy(); }, 60000);
 })();
 </script>
+</body>
+</html>

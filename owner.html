@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Gilmore Owner Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: sticky top bar, stat row, filter tabs, then appointments grouped under day headings. */
+:root {
+  --bg: #f3f6fb; --surface: #ffffff; --surface-2: #f6f8fc; --line: #e3e8f1;
+  --fg: #111827; --muted: #5b6474; --faint: #8a93a3;
+  --blue: #2361e8; --blue-soft: #e8efff; --green: #17a34a; --green-soft: #e9f9ef;
+  --red: #dc2626; --red-soft: #fdeeee; --orange: #ea6a0c; --orange-soft: #fff1e6; --on-accent: #ffffff;
+  --shadow: 0 1px 2px rgba(17, 24, 39, .05), 0 4px 14px rgba(35, 97, 232, .06);
+  --font: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1118; --surface: #151b25; --surface-2: #1b2230; --line: #263043;
+    --fg: #eef2f8; --muted: #a3adbf; --faint: #7a8597;
+    --blue: #5b8cff; --blue-soft: #1a2643; --green: #3fcf74; --green-soft: #13291d;
+    --red: #f26464; --red-soft: #2d1719; --orange: #ff8a3d; --orange-soft: #2e1d10;
+    --shadow: 0 1px 2px rgba(0,0,0,.3); color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased; padding-bottom: env(safe-area-inset-bottom, 0px); }
+.wrap { max-width: 980px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+p { margin: 0; }
+button, input { font: inherit; color: inherit; }
+.num { font-variant-numeric: tabular-nums; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 6px; }
+
+header.top { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); padding-top: env(safe-area-inset-top, 0px); }
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 12px; }
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.mark { width: 36px; height: 36px; border-radius: 10px; background: var(--blue); color: var(--on-accent); display: grid; place-items: center; font-weight: 800; flex: none; }
+.brand b { display: block; font-size: 15px; line-height: 1.15; }
+.brand small { display: block; color: var(--muted); font-size: 12px; }
+.btn { border: 0; border-radius: 9px; padding: 10px 16px; font-weight: 700; font-size: 14px; cursor: pointer; background: var(--blue); color: var(--on-accent); }
+.btn.ghost { background: var(--surface); color: var(--fg); border: 1px solid var(--line); }
+.btn.red { background: var(--red); }
+.btn.small { padding: 7px 11px; font-size: 13px; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+#top-actions { flex-wrap: nowrap; }
+
+.signin { max-width: 420px; margin: 48px auto; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 24px; box-shadow: var(--shadow); display: grid; gap: 14px; }
+.signin h1 { font-size: 22px; }
+.signin p { color: var(--muted); font-size: 14px; }
+.field { display: grid; gap: 6px; }
+.field label { font-size: 13px; font-weight: 600; }
+.field input { font-size: 15px; padding: 11px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); width: 100%; }
+.msg { border-radius: 10px; padding: 10px 12px; font-size: 13.5px; background: var(--blue-soft); }
+.msg.err { background: var(--red-soft); color: var(--red); }
+
+main { padding-block: 20px 48px; display: grid; gap: 18px; }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 2px; min-width: 0; }
+.stat small { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+.stat b { font-size: 24px; font-weight: 800; }
+.stat b.sm { font-size: 15px; line-height: 1.3; }
+@media (max-width: 640px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.toolbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.tabs { display: flex; gap: 4px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 4px; overflow-x: auto; }
+.tabs button { border: 0; background: none; padding: 7px 12px; border-radius: 7px; font-weight: 700; font-size: 13.5px; cursor: pointer; color: var(--muted); white-space: nowrap; }
+.tabs button.on { background: var(--surface); color: var(--fg); box-shadow: var(--shadow); }
+.updated { color: var(--faint); font-size: 12.5px; }
+
+.day { display: grid; gap: 10px; }
+.day h2 { font-size: 13px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding-top: 6px; }
+.day h2 span { color: var(--blue); }
+.appt { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--blue); border-radius: 12px; padding: 14px 16px; display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 14px; box-shadow: var(--shadow); }
+.appt.completed { border-left-color: var(--green); }
+.appt.cancelled { border-left-color: var(--faint); opacity: .7; }
+.appt.quote { border-left-color: var(--orange); }
+.time b { display: block; font-size: 16px; }
+.time span { color: var(--muted); font-size: 13px; }
+.info { display: grid; gap: 6px; min-width: 0; }
+.info h3 { font-size: 16px; }
+.info .opt { color: var(--muted); font-size: 13.5px; }
+.kv { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 16px; font-size: 13.5px; }
+.kv div { min-width: 0; overflow-wrap: anywhere; }
+.kv span { color: var(--faint); font-size: 11.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; display: block; }
+.kv a { color: var(--blue); font-weight: 600; text-decoration: none; }
+.notes { background: var(--surface-2); border-radius: 8px; padding: 8px 10px; font-size: 13.5px; }
+.badges { display: flex; gap: 6px; flex-wrap: wrap; }
+.badge { font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: 3px 8px; border-radius: 6px; background: var(--blue-soft); color: var(--blue); }
+.badge.g { background: var(--green-soft); color: var(--green); }
+.badge.o { background: var(--orange-soft); color: var(--orange); }
+.badge.x { background: var(--surface-2); color: var(--muted); }
+.confirm { background: var(--red-soft); border-radius: 10px; padding: 10px 12px; display: grid; gap: 8px; font-size: 13.5px; }
+@media (max-width: 560px) { .appt { grid-template-columns: minmax(0, 1fr); gap: 8px; } .kv { grid-template-columns: minmax(0, 1fr); } }
+.empty { text-align: center; color: var(--muted); padding: 40px 0; background: var(--surface); border: 1px dashed var(--line); border-radius: 14px; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap bar">
+    <div class="brand"><span class="mark">G</span><span><b>Gilmore Cleaning Services</b><small>Owner dashboard</small></span></div>
+    <div class="actions" id="top-actions" hidden>
+      <button class="btn ghost small" id="refresh" type="button">Refresh</button>
+      <button class="btn ghost small" id="signout" type="button">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="signin" id="setup" hidden>
+    <h1>Finish setup first</h1>
+    <p>This page needs your Supabase project details in <b>config.js</b>. Follow the setup steps in the README, then reload this page.</p>
+  </section>
+
+  <form class="signin" id="signin" hidden novalidate>
+    <h1>Owner sign-in</h1>
+    <p>Enter your email and we'll send you a sign-in link. No password needed.</p>
+    <div class="field"><label for="email">Email</label><input id="email" type="email" autocomplete="email" placeholder="you@example.com" required></div>
+    <button class="btn" type="submit" id="send">Email me a sign-in link</button>
+    <div class="msg" id="signin-msg" hidden></div>
+  </form>
+
+  <section class="signin" id="notowner" hidden>
+    <h1>This email isn't the owner</h1>
+    <p id="notowner-text">Only the owner email listed in the database can see appointments.</p>
+    <button class="btn ghost" type="button" data-signout>Sign out</button>
+  </section>
+
+  <main id="dash" hidden>
+    <div class="stats">
+      <div class="stat"><small>Today</small><b class="num" id="s-today">0</b></div>
+      <div class="stat"><small>Next 7 days</small><b class="num" id="s-week">0</b></div>
+      <div class="stat"><small>All upcoming</small><b class="num" id="s-up">0</b></div>
+      <div class="stat"><small>Next appointment</small><b class="sm num" id="s-next">None</b></div>
+    </div>
+    <div class="toolbar">
+      <div class="tabs" role="tablist" id="tabs">
+        <button type="button" data-tab="upcoming" class="on">Upcoming</button>
+        <button type="button" data-tab="today">Today</button>
+        <button type="button" data-tab="past">Past</button>
+        <button type="button" data-tab="cancelled">Cancelled</button>
+      </div>
+      <span class="updated" id="updated"></span>
+    </div>
+    <div class="msg err" id="dash-err" hidden></div>
+    <div id="list" style="display:grid;gap:18px"></div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script>
+(function () {
+  const CFG = window.GILMORE_CONFIG || {};
+  const $ = id => document.getElementById(id);
+  const show = id => ["setup", "signin", "notowner", "dash"].forEach(x => { $(x).hidden = x !== id; });
+  const esc = t => String(t ?? "").replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+  const fmtTime = d => d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  const fmtDay = d => d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+  const dayKey = d => d.toDateString();
+  const FREQ = { once: "One-time", weekly: "Weekly", biweekly: "Every 2 weeks", monthly: "Monthly" };
+
+  if (!CFG.supabaseUrl || !CFG.supabaseAnonKey || !window.supabase) { show("setup"); return; }
+  const sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey);
+
+  let rows = [], tab = "upcoming", confirmId = null, timer = null;
+
+  // ----- sign-in -----
+  $("signin").addEventListener("submit", async ev => {
+    ev.preventDefault();
+    const email = $("email").value.trim(), msg = $("signin-msg");
+    if (!/^\S+@\S+\.\S+$/.test(email)) { msg.hidden = false; msg.className = "msg err"; msg.textContent = "Enter a valid email address."; return; }
+    $("send").disabled = true; $("send").textContent = "Sending…";
+    const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.href.split("#")[0] } });
+    $("send").disabled = false; $("send").textContent = "Email me a sign-in link";
+    msg.hidden = false;
+    if (error) { msg.className = "msg err"; msg.textContent = error.message; }
+    else { msg.className = "msg"; msg.textContent = `Check ${email} for a sign-in link. Open it on this device.`; }
+  });
+
+  async function signOut() { await sb.auth.signOut(); clearInterval(timer); rows = []; $("top-actions").hidden = true; show("signin"); }
+  $("signout").addEventListener("click", signOut);
+  document.querySelector("[data-signout]").addEventListener("click", signOut);
+
+  async function enter(session) {
+    if (!session) { $("top-actions").hidden = true; show("signin"); return; }
+    $("top-actions").hidden = false;
+    const { data: isOwner, error } = await sb.rpc("is_owner");
+    if (error || !isOwner) { $("notowner-text").textContent = `${session.user.email} isn't listed as the owner. Sign in with the owner email, or add this email to the owners table in Supabase.`; show("notowner"); return; }
+    show("dash");
+    await load();
+    clearInterval(timer); timer = setInterval(load, 60000);
+  }
+
+  sb.auth.onAuthStateChange((_e, session) => { enter(session); });
+
+  // ----- data -----
+  async function load() {
+    const since = new Date(); since.setDate(since.getDate() - 90);
+    const { data, error } = await sb.from("appointments").select("*").gte("start_at", since.toISOString()).order("start_at");
+    const err = $("dash-err");
+    if (error) { err.hidden = false; err.textContent = "Couldn't load appointments: " + error.message; return; }
+    err.hidden = true;
+    rows = data;
+    $("updated").textContent = "Updated " + fmtTime(new Date());
+    render();
+  }
+
+  async function setStatus(id, status) {
+    const { error } = await sb.from("appointments").update({ status, updated_at: new Date().toISOString() }).eq("id", id);
+    if (error) { $("dash-err").hidden = false; $("dash-err").textContent = error.message; return; }
+    confirmId = null; await load();
+  }
+
+  // ----- render -----
+  function render() {
+    const now = new Date(), today = dayKey(now), weekEnd = new Date(now.getTime() + 7 * 864e5);
+    const upcoming = rows.filter(r => r.status === "booked" && new Date(r.end_at) > now);
+    $("s-today").textContent = upcoming.filter(r => dayKey(new Date(r.start_at)) === today).length;
+    $("s-week").textContent = upcoming.filter(r => new Date(r.start_at) < weekEnd).length;
+    $("s-up").textContent = upcoming.length;
+    const n = upcoming[0];
+    $("s-next").textContent = n ? `${new Date(n.start_at).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}, ${fmtTime(new Date(n.start_at))} · ${n.service}` : "None";
+
+    let list;
+    if (tab === "upcoming") list = upcoming;
+    else if (tab === "today") list = rows.filter(r => r.status !== "cancelled" && dayKey(new Date(r.start_at)) === today);
+    else if (tab === "past") list = rows.filter(r => r.status !== "cancelled" && new Date(r.end_at) <= now).reverse();
+    else list = rows.filter(r => r.status === "cancelled").reverse();
+
+    if (!list.length) {
+      $("list").innerHTML = `<div class="empty">${{ upcoming: "No upcoming appointments yet. New bookings show up here and in your email.", today: "Nothing booked today.", past: "No past appointments in the last 90 days.", cancelled: "No cancellations." }[tab]}</div>`;
+      return;
+    }
+    const groups = [];
+    list.forEach(r => {
+      const k = dayKey(new Date(r.start_at));
+      let g = groups.find(x => x.k === k); if (!g) groups.push(g = { k, d: new Date(r.start_at), items: [] });
+      g.items.push(r);
+    });
+    $("list").innerHTML = groups.map(g => `<section class="day"><h2>${k2label(g.d)} <span class="num">· ${g.items.length}</span></h2>${g.items.map(card).join("")}</section>`).join("");
+  }
+  function k2label(d) {
+    const t = new Date(), tm = new Date(t.getTime() + 864e5);
+    if (dayKey(d) === dayKey(t)) return "Today, " + d.toLocaleDateString(undefined, { month: "long", day: "numeric" });
+    if (dayKey(d) === dayKey(tm)) return "Tomorrow, " + d.toLocaleDateString(undefined, { month: "long", day: "numeric" });
+    return fmtDay(d);
+  }
+  function card(r) {
+    const st = new Date(r.start_at), en = new Date(r.end_at), past = en <= new Date();
+    const mins = Math.round((en - st) / 60000), dur = `${Math.floor(mins / 60) ? Math.floor(mins / 60) + " hr " : ""}${mins % 60 ? mins % 60 + " min" : ""}`.trim();
+    const badges = [
+      r.status === "cancelled" ? `<span class="badge x">Cancelled</span>` : r.status === "completed" ? `<span class="badge g">Done</span>` : past ? `<span class="badge x">Not marked done</span>` : `<span class="badge">Booked</span>`,
+      r.is_quote ? `<span class="badge o">Free quote visit</span>` : "",
+      r.frequency && r.frequency !== "once" ? `<span class="badge">${FREQ[r.frequency] || esc(r.frequency)}</span>` : ""
+    ].join("");
+    let acts = "";
+    if (r.status === "booked") {
+      acts = confirmId === r.id
+        ? `<div class="confirm">Cancel ${esc(r.customer_name)}'s ${esc(r.service.toLowerCase())}? Let them know by phone or text.<div class="actions"><button class="btn red small" data-cancel-yes="${r.id}" type="button">Yes, cancel</button><button class="btn ghost small" data-cancel-no type="button">Keep it</button></div></div>`
+        : `<div class="actions"><button class="btn small" data-done="${r.id}" type="button">Mark done</button><button class="btn ghost small" data-cancel="${r.id}" type="button" style="color:var(--red)">Cancel</button></div>`;
+    } else if (r.status === "completed") {
+      acts = `<div class="actions"><button class="btn ghost small" data-undo="${r.id}" type="button">Undo done</button></div>`;
+    }
+    const maps = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(r.address);
+    return `<article class="appt ${r.status}${r.is_quote ? " quote" : ""}">
+      <div class="time num"><b>${fmtTime(st)}</b><span>to ${fmtTime(en)}</span><br><span>${dur}</span></div>
+      <div class="info">
+        <div class="badges">${badges}</div>
+        <h3>${esc(r.service)}</h3>
+        <span class="opt">${esc(r.option_label)}${r.addons && r.addons.length ? " + " + esc(r.addons.join(", ")) : ""} · <b class="num">${esc(r.price_label)}</b></span>
+        <div class="kv">
+          <div><span>Customer</span>${esc(r.customer_name)}</div>
+          <div><span>Phone</span><span style="all:unset;user-select:all" class="num">${esc(r.customer_phone)}</span></div>
+          <div><span>Address</span><a href="${maps}" target="_blank" rel="noopener">${esc(r.address)}</a></div>
+          <div><span>Email</span>${esc(r.customer_email || "—")}</div>
+        </div>
+        ${r.notes ? `<div class="notes">${esc(r.notes)}</div>` : ""}
+        <span class="updated num">${esc(r.ref)} · booked ${new Date(r.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
+        ${acts}
+      </div></article>`;
+  }
+
+  // ----- events -----
+  $("refresh").addEventListener("click", load);
+  $("tabs").addEventListener("click", ev => {
+    const b = ev.target.closest("[data-tab]"); if (!b) return;
+    tab = b.dataset.tab; confirmId = null;
+    document.querySelectorAll("#tabs button").forEach(x => x.classList.toggle("on", x === b));
+    render();
+  });
+  $("list").addEventListener("click", ev => {
+    const t = ev.target;
+    const d = t.closest("[data-done]"); if (d) { d.disabled = true; setStatus(d.dataset.done, "completed"); return; }
+    const u = t.closest("[data-undo]"); if (u) { u.disabled = true; setStatus(u.dataset.undo, "booked"); return; }
+    const c = t.closest("[data-cancel]"); if (c) { confirmId = c.dataset.cancel; render(); return; }
+    if (t.closest("[data-cancel-no]")) { confirmId = null; render(); return; }
+    const y = t.closest("[data-cancel-yes]"); if (y) { y.disabled = true; setStatus(y.dataset.cancelYes, "cancelled"); }
+  });
+})();
+</script>
+</body>
+</html>
