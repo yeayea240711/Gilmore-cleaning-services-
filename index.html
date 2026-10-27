@@ -1,0 +1,1095 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Book lawn care, house cleaning, windows, car detailing, pressure washing, trash can and pet waste services with Gilmore Cleaning Services.">
+<title>Gilmore Cleaning Services</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&display=swap">
+<style>
+/* Layout: sticky brand bar + category chips, then one section per service line, cards in a wrapping grid; booking opens as a bottom sheet (phone) / centered panel (desktop). */
+:root {
+  --bg: #f3f6fb;
+  --surface: #ffffff;
+  --surface-2: #f6f8fc;
+  --line: #e3e8f1;
+  --fg: #111827;
+  --muted: #5b6474;
+  --faint: #8a93a3;
+  --blue: #2361e8;
+  --blue-soft: #e8efff;
+  --green: #17a34a;
+  --green-soft: #e9f9ef;
+  --red: #dc2626;
+  --red-soft: #fdeeee;
+  --orange: #ea6a0c;
+  --orange-soft: #fff1e6;
+  --ink: #111827;
+  --on-accent: #ffffff;
+  --shadow: 0 1px 2px rgba(17, 24, 39, .05), 0 4px 14px rgba(35, 97, 232, .06);
+  --scrim: rgba(10, 14, 24, .5);
+  --font: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --radius: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1118; --surface: #151b25; --surface-2: #1b2230; --line: #263043;
+    --fg: #eef2f8; --muted: #a3adbf; --faint: #7a8597;
+    --blue: #5b8cff; --blue-soft: #1a2643; --green: #3fcf74; --green-soft: #13291d;
+    --red: #f26464; --red-soft: #2d1719; --orange: #ff8a3d; --orange-soft: #2e1d10;
+    --ink: #e9eef6; --on-accent: #ffffff;
+    --shadow: 0 1px 2px rgba(0,0,0,.3); --scrim: rgba(0,0,0,.6);
+    color-scheme: dark;
+  }
+  :root:not([data-theme="light"]) .btn.ink { color: #0d1118; }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1118; --surface: #151b25; --surface-2: #1b2230; --line: #263043;
+  --fg: #eef2f8; --muted: #a3adbf; --faint: #7a8597;
+  --blue: #5b8cff; --blue-soft: #1a2643; --green: #3fcf74; --green-soft: #13291d;
+  --red: #f26464; --red-soft: #2d1719; --orange: #ff8a3d; --orange-soft: #2e1d10;
+  --ink: #e9eef6; --on-accent: #ffffff;
+  --shadow: 0 1px 2px rgba(0,0,0,.3); --scrim: rgba(0,0,0,.6);
+  color-scheme: dark;
+}
+:root[data-theme="dark"] .btn.ink { color: #0d1118; }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+p { margin: 0; }
+button { font: inherit; color: inherit; }
+.num { font-variant-numeric: tabular-nums; }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 6px; }
+
+/* Header */
+header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 12px; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--fg); min-width: 0; }
+.mark { width: 36px; height: 36px; border-radius: 10px; background: var(--blue); color: var(--on-accent); display: grid; place-items: center; font-weight: 800; font-size: 17px; flex: none; }
+.brand b { display: block; font-size: 15px; line-height: 1.15; }
+.brand small { display: block; color: var(--muted); font-size: 12px; }
+.mybook { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 8px 14px; font-weight: 600; font-size: 13px; cursor: pointer; white-space: nowrap; display: flex; gap: 6px; align-items: center; }
+.mybook .count { background: var(--blue); color: var(--on-accent); border-radius: 999px; min-width: 20px; height: 20px; font-size: 11px; display: grid; place-items: center; padding: 0 6px; }
+.chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px; scrollbar-width: none; }
+.chips::-webkit-scrollbar { display: none; }
+.chip { flex: none; border: 1px solid var(--line); background: var(--surface); color: var(--muted); padding: 7px 13px; border-radius: 999px; font-size: 13px; font-weight: 600; text-decoration: none; }
+.chip:hover { color: var(--blue); border-color: var(--blue); }
+
+/* Intro */
+.intro { padding-block: 28px 8px; display: grid; gap: 10px; }
+.intro h1 { font-size: clamp(26px, 5vw, 38px); font-weight: 800; letter-spacing: -.02em; line-height: 1.1; }
+.intro h1 span { color: var(--blue); }
+.intro p { color: var(--muted); max-width: 58ch; }
+.trust { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 6px; color: var(--muted); font-size: 13px; font-weight: 500; }
+.trust span::before { content: "✓"; color: var(--green); font-weight: 800; margin-right: 6px; }
+
+/* Sections */
+section.svc { padding-block: 26px 6px; scroll-margin-top: 120px; }
+.sec-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.eyebrow { font-size: 12.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.tag { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 4px 8px; border-radius: 6px; }
+.tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.c-green .eyebrow { color: var(--green); } .c-green .tag { color: var(--green); background: var(--green-soft); }
+.c-blue .eyebrow { color: var(--blue); } .c-blue .tag { color: var(--blue); background: var(--blue-soft); }
+.c-red .eyebrow { color: var(--red); } .c-red .tag { color: var(--red); background: var(--red-soft); }
+.c-orange .eyebrow { color: var(--orange); } .c-orange .tag { color: var(--orange); background: var(--orange-soft); }
+
+.grid { display: grid; gap: 14px; }
+.g4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 860px) { .g4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .g2 { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 400px) { .g4 { grid-template-columns: minmax(0, 1fr); } }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.card h3 { font-size: 16px; font-weight: 700; }
+.card .sub { font-size: 11.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.card .desc { color: var(--muted); font-size: 13.5px; }
+.card .foot { margin-top: auto; padding-top: 14px; display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.price { font-size: 19px; font-weight: 800; letter-spacing: -.01em; }
+.price small { display: block; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); }
+.card.big h3 { font-size: 19px; }
+.card.feature { border-color: var(--blue); box-shadow: 0 0 0 1px var(--blue), var(--shadow); }
+.card.mint { background: var(--green-soft); border-color: color-mix(in srgb, var(--green) 30%, var(--line)); }
+.card.mint .desc { color: color-mix(in srgb, var(--green) 70%, var(--fg)); }
+.card.topred { border-top: 3px solid var(--red); }
+
+.link { background: none; border: 0; color: var(--blue); font-weight: 700; font-size: 14px; cursor: pointer; padding: 6px 2px; }
+.c-green .mint .link { color: var(--green); }
+.btn { border: 0; border-radius: 9px; padding: 11px 18px; font-weight: 700; font-size: 14.5px; cursor: pointer; background: var(--blue); color: var(--on-accent); text-align: center; transition: transform .12s ease, filter .12s ease; }
+.btn:hover { filter: brightness(1.07); }
+.btn:active { transform: translateY(1px); }
+.btn.ink { background: var(--ink); color: #fff; }
+.btn.red { background: var(--red); }
+.btn.orange { background: var(--orange); }
+.btn.block { width: 100%; }
+.btn.ghost { background: var(--surface-2); color: var(--fg); border: 1px solid var(--line); }
+.btn:disabled { opacity: .45; cursor: not-allowed; filter: none; }
+
+.checks { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 8px; font-size: 13.5px; color: var(--muted); }
+.checks li { display: flex; gap: 8px; }
+.checks li::before { content: "✓"; color: var(--blue); font-weight: 800; }
+.checks.plus li::before { content: "+"; color: var(--red); }
+.panel-title { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.card.soft-blue { background: var(--blue-soft); border-color: color-mix(in srgb, var(--blue) 30%, var(--line)); box-shadow: none; }
+.card.soft-red { background: var(--red-soft); border-color: color-mix(in srgb, var(--red) 25%, var(--line)); box-shadow: none; }
+.card.soft-red .panel-title { color: var(--red); }
+.card.soft-blue .panel-title { color: var(--blue); }
+.rows { display: grid; gap: 9px; margin-top: 8px; font-size: 13.5px; }
+.rows div { display: flex; justify-content: space-between; gap: 10px; color: var(--muted); }
+.rows div b { color: var(--fg); }
+.rows .hl { color: var(--blue); font-weight: 600; } .rows .hl b { color: var(--blue); }
+.rows .hg { color: var(--green); font-weight: 600; } .rows .hg b { color: var(--green); }
+
+.vehicle .line { display: flex; justify-content: space-between; gap: 10px; font-size: 14.5px; color: var(--muted); }
+.vehicle .line b { color: var(--fg); }
+.vehicle .gold, .vehicle .gold b { color: var(--red); font-style: italic; font-weight: 600; }
+.vehicle .head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 4px; }
+.vehicle .head span { color: var(--faint); font-size: 11.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; }
+.vehicle .btn { margin-top: 12px; }
+
+/* Photo cards */
+.photo { display: grid; grid-template-columns: minmax(0, 36%) minmax(0, 1fr); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.photo + .photo { margin-top: 14px; }
+.photo .img { position: relative; min-height: 220px; background: var(--surface-2) center / cover no-repeat; border-right: 3px solid var(--accent, var(--blue)); }
+.photo .body { padding: 22px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.photo .titlerow { display: flex; justify-content: space-between; gap: 14px; align-items: flex-start; }
+.photo h3 { font-size: 21px; font-weight: 800; letter-spacing: -.01em; }
+.photo .titlerow p { color: var(--muted); font-size: 14px; }
+.photo .price { font-size: 25px; text-align: right; white-space: nowrap; }
+.feats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 14px; font-size: 13.5px; font-weight: 500; }
+.feats span::before { content: "●"; color: var(--accent); font-size: 9px; margin-right: 8px; vertical-align: 2px; }
+.photo .footer { margin-top: auto; border-top: 1px solid var(--line); padding-top: 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.photo .footer em { color: var(--faint); font-size: 13px; }
+.subcards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.subcard { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 4px; }
+.subcard .k { display: flex; justify-content: space-between; font-size: 11.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--blue); }
+.subcard .k span { color: var(--faint); }
+.subcard b { font-size: 17px; }
+.subcard p { color: var(--muted); font-size: 13px; }
+.quote-strip { background: var(--blue-soft); border-radius: 12px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.quote-strip em { color: var(--muted); font-size: 13px; }
+@media (max-width: 680px) {
+  .photo { grid-template-columns: minmax(0, 1fr); }
+  .photo .img { min-height: 190px; border-right: 0; border-bottom: 3px solid var(--accent, var(--blue)); }
+  .feats, .subcards { grid-template-columns: minmax(0, 1fr); }
+}
+
+footer.site { padding-block: 40px 56px; color: var(--muted); font-size: 13px; display: grid; gap: 6px; text-align: center; }
+footer.site a { color: var(--blue); font-weight: 600; text-decoration: none; }
+
+/* Booking sheet */
+.scrim { position: fixed; inset: 0; background: var(--scrim); z-index: 40; display: flex; align-items: flex-end; justify-content: center; }
+.scrim.anim { animation: fade .18s ease; }
+.scrim.anim .sheet { animation: up .22s ease; }
+@media (min-width: 700px) { .scrim { align-items: center; padding: 24px; } }
+.sheet { background: var(--surface); width: 100%; max-width: 560px; max-height: 92vh; border-radius: 18px 18px 0 0; display: flex; flex-direction: column; overflow: hidden; }
+@media (min-width: 700px) { .sheet { border-radius: 18px; max-height: 88vh; } }
+.sheet-head { padding: 16px 20px 12px; border-bottom: 1px solid var(--line); display: grid; gap: 10px; }
+.sheet-head .row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.sheet-head h2 { font-size: 18px; font-weight: 800; }
+.sheet-head .eyebrow { font-size: 11px; }
+.x { border: 0; background: var(--surface-2); width: 34px; height: 34px; border-radius: 50%; cursor: pointer; font-size: 18px; line-height: 1; flex: none; }
+.steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.steps div { height: 4px; border-radius: 4px; background: var(--line); }
+.steps div.on { background: var(--blue); }
+.steplabel { font-size: 12px; color: var(--muted); font-weight: 600; }
+.sheet-body { padding: 18px 20px; overflow-y: auto; display: grid; gap: 18px; align-content: start; }
+.sheet-foot { border-top: 1px solid var(--line); padding: 14px 20px calc(14px + env(safe-area-inset-bottom, 0px)); display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--surface); }
+.total small { display: block; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); }
+.total b { font-size: 20px; font-weight: 800; }
+.foot-btns { display: flex; gap: 8px; }
+
+.group { display: grid; gap: 8px; }
+.group > label, .group > .lbl { font-size: 12.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.opt { display: flex; gap: 12px; align-items: center; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; cursor: pointer; background: var(--surface); }
+.opt:hover { border-color: color-mix(in srgb, var(--blue) 50%, var(--line)); }
+.opt.on { border-color: var(--blue); background: var(--blue-soft); box-shadow: 0 0 0 1px var(--blue); }
+.opt input { accent-color: var(--blue); width: 18px; height: 18px; flex: none; margin: 0; }
+.opt .t { flex: 1; min-width: 0; }
+.opt .t b { display: block; font-size: 14.5px; }
+.opt .t span { display: block; font-size: 12.5px; color: var(--muted); }
+.opt .p { font-weight: 700; white-space: nowrap; }
+.stepper { display: flex; align-items: center; gap: 12px; }
+.stepper button { width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); font-size: 18px; cursor: pointer; }
+.stepper output { min-width: 34px; text-align: center; font-weight: 800; font-size: 18px; }
+.hint { font-size: 12.5px; color: var(--muted); }
+.note { background: var(--blue-soft); color: var(--fg); border-radius: 10px; padding: 10px 12px; font-size: 13px; }
+
+.dates { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+.date { flex: none; width: 62px; border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 8px 0; text-align: center; cursor: pointer; display: grid; gap: 1px; }
+.date small { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--muted); letter-spacing: .05em; }
+.date b { font-size: 19px; }
+.date.on { background: var(--blue); border-color: var(--blue); color: var(--on-accent); }
+.date.on small { color: var(--on-accent); }
+.date:disabled { opacity: .4; cursor: not-allowed; }
+.times { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.time { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 10px 4px; font-weight: 600; font-size: 13.5px; cursor: pointer; }
+.time.on { background: var(--blue); border-color: var(--blue); color: var(--on-accent); }
+
+.field { display: grid; gap: 6px; }
+.field label { font-size: 13px; font-weight: 600; }
+.field input, .field textarea, .field select { font: inherit; font-size: 15px; padding: 11px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); color: var(--fg); width: 100%; }
+.field input:focus, .field textarea:focus { outline: 2px solid var(--blue); outline-offset: 0; border-color: transparent; }
+.field .err { color: var(--red); font-size: 12.5px; }
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 420px) { .two { grid-template-columns: minmax(0, 1fr); } }
+
+.summary { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.summary .r { display: flex; justify-content: space-between; gap: 12px; padding: 11px 14px; font-size: 14px; border-bottom: 1px solid var(--line); }
+.summary .r:last-child { border-bottom: 0; }
+.summary .r span { color: var(--muted); }
+.summary .r b { text-align: right; }
+.summary .r.tot { background: var(--surface-2); font-size: 16px; }
+.summary .r.tot b { font-size: 18px; }
+
+.done { text-align: center; display: grid; gap: 10px; justify-items: center; padding: 10px 0; }
+.done .tick { width: 64px; height: 64px; border-radius: 50%; background: var(--green-soft); color: var(--green); display: grid; place-items: center; font-size: 32px; font-weight: 800; }
+.done h2 { font-size: 22px; }
+.done p { color: var(--muted); max-width: 40ch; }
+.ref { font-weight: 800; letter-spacing: .08em; background: var(--surface-2); border: 1px dashed var(--line); padding: 6px 12px; border-radius: 8px; }
+
+.mylist { display: grid; gap: 10px; }
+.booking { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: grid; gap: 2px; }
+.booking .tp { display: flex; justify-content: space-between; gap: 10px; font-weight: 700; }
+.booking span { color: var(--muted); font-size: 13px; }
+.empty { color: var(--muted); text-align: center; padding: 24px 0; }
+
+/* Booksy-style profile */
+.profile { margin-top: 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; box-shadow: var(--shadow); }
+.cover { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 3px; height: 150px; background: var(--line); }
+.cover div { background: var(--surface-2) center / cover no-repeat; }
+.pbody { padding: 0 20px 20px; display: grid; gap: 16px; }
+.pid { display: flex; gap: 14px; align-items: flex-end; margin-top: -30px; }
+.avatar { width: 76px; height: 76px; flex: none; border-radius: 20px; background: var(--blue); color: var(--on-accent); display: grid; place-items: center; font-size: 34px; font-weight: 800; border: 4px solid var(--surface); }
+.profile h1 { font-size: clamp(21px, 4vw, 28px); font-weight: 800; letter-spacing: -.02em; line-height: 1.15; }
+.tagline { color: var(--muted); font-size: 14px; }
+.pmeta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.pm { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: grid; gap: 2px; min-width: 0; }
+.pm small { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+.pm b { font-size: 14px; }
+.pm b.open { color: var(--green); }
+.pactions { display: flex; gap: 8px; flex-wrap: wrap; }
+.pactions .btn { text-decoration: none; }
+@media (max-width: 600px) { .pmeta { grid-template-columns: minmax(0, 1fr); } .cover { height: 110px; } .pid { flex-direction: column; align-items: flex-start; } }
+
+/* Calendar */
+.cal-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.cal-head b { font-size: 15px; }
+.cal-nav { display: flex; gap: 6px; }
+.cal-nav button { width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); cursor: pointer; font-size: 16px; }
+.cal-nav button:disabled { opacity: .35; cursor: not-allowed; }
+.week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.week .date { width: auto; }
+.week .date .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); margin: 2px auto 0; }
+.week .date.on .dot { background: var(--on-accent); }
+.week .date:disabled .dot { background: transparent; }
+.slotgroup { display: grid; gap: 8px; }
+.slotgroup h4 { margin: 0; font-size: 12px; font-weight: 700; color: var(--muted); }
+.times.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 420px) { .times.four { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.dur { display: inline-flex; gap: 6px; align-items: center; font-size: 12.5px; font-weight: 600; color: var(--muted); background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; }
+
+/* Appointment cards */
+.appt { border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 10px; background: var(--surface); }
+.appt .when { display: flex; gap: 12px; align-items: center; }
+.appt .cal { width: 52px; flex: none; border-radius: 10px; background: var(--blue-soft); color: var(--blue); text-align: center; padding: 6px 0; display: grid; }
+.appt .cal small { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
+.appt .cal b { font-size: 20px; line-height: 1.1; }
+.appt .info { min-width: 0; display: grid; gap: 1px; }
+.appt .info b { font-size: 15px; }
+.appt .info span { color: var(--muted); font-size: 13px; }
+.appt .acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.appt .acts .btn { padding: 8px 12px; font-size: 13px; }
+.appt.cancelled { opacity: .6; }
+.appt.cancelled .cal { background: var(--surface-2); color: var(--faint); }
+.status { font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: 3px 8px; border-radius: 6px; justify-self: start; }
+.status.up { background: var(--green-soft); color: var(--green); }
+.status.cx { background: var(--red-soft); color: var(--red); }
+.status.past { background: var(--surface-2); color: var(--muted); }
+.confirm-box { background: var(--red-soft); border-radius: 10px; padding: 10px 12px; display: grid; gap: 8px; font-size: 13.5px; }
+.tabs { display: flex; gap: 6px; background: var(--surface-2); border-radius: 10px; padding: 4px; }
+.tabs button { flex: 1; border: 0; background: none; padding: 8px; border-radius: 8px; font-weight: 700; font-size: 13.5px; cursor: pointer; color: var(--muted); }
+.tabs button.on { background: var(--surface); color: var(--fg); box-shadow: var(--shadow); }
+.svc-pick { display: grid; gap: 8px; }
+.svc-pick button { display: flex; justify-content: space-between; gap: 12px; align-items: center; text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 12px 14px; cursor: pointer; }
+.svc-pick button:hover { border-color: var(--blue); }
+.svc-pick b { display: block; font-size: 14.5px; }
+.svc-pick span { display: block; font-size: 12.5px; color: var(--muted); }
+.svc-pick .p { font-weight: 700; white-space: nowrap; }
+
+@keyframes up { from { transform: translateY(24px); opacity: .6; } to { transform: none; opacity: 1; } }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .scrim.anim, .scrim.anim .sheet { animation: none; } .btn { transition: none; } }
+</style>
+<style>
+html, body { margin: 0; }
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="bar">
+      <a class="brand" href="#top">
+        <span class="mark">G</span>
+        <span><b>Gilmore Cleaning Services</b><small>Home, yard &amp; auto care</small></span>
+      </a>
+      <button class="mybook" id="mybook" type="button">My appointments <span class="count num" id="mycount">0</span></button>
+    </div>
+    <nav class="chips" aria-label="Services">
+      <a class="chip" href="#lawn">Lawn care</a>
+      <a class="chip" href="#house">House cleaning &amp; moving</a>
+      <a class="chip" href="#windows">Windows</a>
+      <a class="chip" href="#detail">Car detailing</a>
+      <a class="chip" href="#pressure">Pressure washing</a>
+      <a class="chip" href="#bins">Trash cans</a>
+      <a class="chip" href="#pet">Pet waste</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" id="top">
+  <section class="profile" aria-label="Business profile">
+    <div class="cover" aria-hidden="true">
+      <div style="background-image:url('img/pressure.jpg')"></div>
+      <div style="background-image:url('img/bins.jpg')"></div>
+      <div style="background-image:url('img/pet.jpg')"></div>
+    </div>
+    <div class="pbody">
+      <div class="pid">
+        <span class="avatar">G</span>
+        <div style="min-width:0">
+          <h1>Gilmore Cleaning Services</h1>
+          <p class="tagline">Lawn care, house cleaning, windows, detailing, pressure washing and more.</p>
+        </div>
+      </div>
+      <div class="pmeta">
+        <div class="pm"><small>Hours</small><b id="today-hours">Mon–Sat · 8:00 AM – 6:00 PM</b></div>
+        <div class="pm"><small>Next available</small><b class="num" id="next-open">—</b></div>
+        <div class="pm"><small>Payment</small><b>Pay after the job</b></div>
+      </div>
+      <div class="pactions">
+        <button class="btn" type="button" data-nav="pick">Book now</button>
+        <button class="btn ghost" type="button" data-nav="mine">My appointments</button>
+        <a class="btn ghost" href="https://www.instagram.com/motivational_dezzy/" target="_blank" rel="noopener">Instagram</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Lawn -->
+  <section class="svc c-green" id="lawn">
+    <div class="sec-head"><span class="eyebrow">Professional lawn care</span><span class="tag">Precision cut</span></div>
+    <div class="grid g4" id="lawn-grid"></div>
+  </section>
+
+  <!-- House -->
+  <section class="svc c-blue" id="house">
+    <div class="sec-head"><span class="eyebrow">House cleaning &amp; moving</span><span class="tag">Interior care</span></div>
+    <div class="grid g2">
+      <div class="card big">
+        <h3>Residential House Cleaning</h3>
+        <p class="desc">Full interior deep cleaning or routine maintenance.</p>
+        <div class="foot"><div class="price num">Starts at $125.00<small>2 hrs 15 mins</small></div><button class="btn" data-book="house">Book</button></div>
+      </div>
+      <div class="card big feature">
+        <h3>Personal Mover</h3>
+        <p class="desc">Efficient, careful moving assistance for your home or office.</p>
+        <div class="foot"><div class="price num">$125.00<small>2 hrs 15 mins</small></div><button class="btn" data-book="mover">Book</button></div>
+      </div>
+    </div>
+    <div class="card big" style="margin-top:14px">
+      <div class="foot" style="padding-top:0;align-items:center">
+        <div style="min-width:0"><h3>Gutter Cleaning</h3><p class="desc">Full debris removal and downspout check.</p></div>
+        <div style="display:flex;align-items:center;gap:14px"><div class="price num" style="text-align:right">$45.00<small>45–60 min</small></div><button class="btn" data-book="gutter">Book</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Windows -->
+  <section class="svc c-blue" id="windows">
+    <div class="sec-head"><span class="eyebrow">Window cleaning</span><span class="tags"><span class="tag">$6.50 / window</span><span class="tag">Packages</span></span></div>
+    <div class="grid g4" id="win-grid"></div>
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card soft-blue">
+        <span class="panel-title">Included in service</span>
+        <ul class="checks">
+          <li>Streak-free glass (interior/exterior)</li>
+          <li>Screen dusting &amp; basic wipe</li>
+          <li>Sill &amp; track cleaning</li>
+          <li>Frame &amp; trim detail</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="panel-title">Custom pricing &amp; add-ons</span>
+        <div class="rows num">
+          <div class="hl">Individual windows (ext) <b>$6.50/ea</b></div>
+          <div class="hg">Full service (individual) <b>$13.75/ea</b></div>
+          <div>Deep track scrubbing <b>+$15</b></div>
+          <div>Hard water removal <b>+$25</b></div>
+          <div>Screen deep wash <b>+$10</b></div>
+        </div>
+        <div class="foot"><span class="hint">Pay by the window for any count.</span><button class="link" data-book="windows" data-opt="win-ext">Book by the window</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Detailing -->
+  <section class="svc c-red" id="detail">
+    <div class="sec-head"><span class="eyebrow">Car detailing</span><span class="tag">Hand wash</span></div>
+    <div class="grid g2">
+      <div class="card vehicle">
+        <div class="head"><h3>Sedan/Coupe</h3><span>2–3.5 hours</span></div>
+        <div class="line num">Standard Detail <b>$100.00</b></div>
+        <div class="line gold num">Gold Package (Full) <b>$150.00</b></div>
+        <button class="btn ink block" data-book="detail" data-opt="sedan-std">Schedule Sedan Detail</button>
+      </div>
+      <div class="card vehicle topred">
+        <div class="head"><h3>SUV/Truck/Van</h3><span>3–5 hours</span></div>
+        <div class="line num">Standard Detail <b>$125.00</b></div>
+        <div class="line gold num">Gold Package (Full) <b>$185.00</b></div>
+        <button class="btn red block" data-book="detail" data-opt="suv-std">Schedule Large Vehicle</button>
+      </div>
+      <div class="card">
+        <span class="panel-title">Standard detail includes</span>
+        <ul class="checks">
+          <li>Full exterior hand wash &amp; dry</li>
+          <li>Interior vacuum &amp; surface wipe</li>
+          <li>Window cleaning (in/out)</li>
+          <li>Rim &amp; tire cleaning</li>
+        </ul>
+      </div>
+      <div class="card soft-red">
+        <span class="panel-title">Gold package (standard + plus)</span>
+        <ul class="checks plus">
+          <li>Carpet &amp; upholstery deep steam</li>
+          <li>Leather cleaning &amp; conditioning</li>
+          <li>Exterior wax &amp; paint sealant</li>
+          <li>Engine bay dusting &amp; shine</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pressure -->
+  <section class="svc c-blue" id="pressure">
+    <div class="sec-head"><span class="eyebrow">Pressure washing</span><span class="tag">Exterior renewal</span></div>
+    <article class="photo" style="--accent: var(--blue)">
+      <div class="img" style="background-image:url('img/pressure.jpg')" role="img" aria-label="Pressure washer cleaning a concrete driveway"></div>
+      <div class="body">
+        <div class="titlerow">
+          <div><h3>Firehouse Deep Clean</h3><p>Commercial grade equipment for residential results.</p></div>
+          <div class="price num" style="color:var(--blue)"><small>Minimum service</small>$125.00</div>
+        </div>
+        <div class="subcards num">
+          <div class="subcard"><div class="k">Driveways <span>Concrete</span></div><b>$150 – $250</b><p>Includes degreasing and surface scrubbing.</p></div>
+          <div class="subcard"><div class="k">House siding <span>Soft wash</span></div><b>$250 – $450</b><p>Safe low-pressure algae removal.</p></div>
+        </div>
+        <div class="quote-strip"><em>Final quote provided on-site.</em><button class="btn" data-book="pressure">Get Free Quote</button></div>
+      </div>
+    </article>
+  </section>
+
+  <!-- Bins + Pet -->
+  <section class="svc c-green" id="bins">
+    <div class="sec-head"><span class="eyebrow">Curbside &amp; yard</span><span class="tag">Sanitize</span></div>
+    <article class="photo" style="--accent: var(--green)">
+      <div class="img" style="background-image:url('img/bins.jpg')" role="img" aria-label="Before and after photos of cleaned trash cans"></div>
+      <div class="body">
+        <div class="titlerow">
+          <div><h3>Trash Can Sanitization</h3><p>Say goodbye to odors, bacteria, and pests.</p></div>
+          <div class="price num">$15.00<small>Per bin</small></div>
+        </div>
+        <div class="feats"><span>Sanitized &amp; deodorized</span><span>High-heat power wash</span><span>99.9% bacteria kill</span><span>30–45 min service</span></div>
+        <div class="footer"><em>Perfect for residential curb appeal.</em><button class="btn ink" data-book="bins">Book Bin Cleaning</button></div>
+      </div>
+    </article>
+    <article class="photo" id="pet" style="--accent: var(--orange); scroll-margin-top:120px">
+      <div class="img" style="background-image:url('img/pet.jpg')" role="img" aria-label="A small white dog sitting on a clean lawn"></div>
+      <div class="body">
+        <div class="titlerow">
+          <div><h3>Pet Waste Removal</h3><p>A clean yard for your pets and family to enjoy.</p></div>
+          <div class="price num">$36.25<small>30–45 mins</small></div>
+        </div>
+        <div class="feats"><span>Full yard scooping</span><span>Proper waste disposal</span><span style="color:var(--orange);font-weight:700">Deodorizing treatment</span><span>Lawn-safe sanitizer</span></div>
+        <div class="footer"><em>One-time or recurring service available.</em><button class="btn orange" data-book="pet">Book Pet Cleanup</button></div>
+      </div>
+    </article>
+  </section>
+
+  <footer class="site">
+    <b style="color:var(--fg)">Gilmore Cleaning Services</b>
+    <span>Follow our work on Instagram: <a href="https://www.instagram.com/motivational_dezzy/" target="_blank" rel="noopener">@motivational_dezzy</a></span>
+    <span>Prices shown are starting rates. Final pricing is confirmed before work begins.</span>
+    <span><a href="owner.html">Owner sign-in</a></span>
+  </footer>
+</main>
+
+<div id="sheet-root"></div>
+
+<script src="config.js"></script>
+<script>
+(function () {
+  const money = n => "$" + n.toFixed(2);
+  const STORE = "gilmore.appointments.v2";
+  const CONTACT = "gilmore.contact.v1";
+
+  // Business hours: Monday–Saturday, 8:00 AM to 6:00 PM. Sunday closed.
+  const OPEN_MIN = 8 * 60, CLOSE_MIN = 18 * 60, STEP = 30, LEAD_MIN = 60;
+  const isClosedDay = d => d.getDay() === 0;
+
+  // Service catalog from the Gilmore Instagram menus. dur = minutes the crew blocks on the calendar.
+  const SERVICES = {
+    lawn: { name: "Lawn Care", cat: "Professional lawn care",
+      options: [
+        { id: "lawn-s", label: "Small Yard", sub: "Up to 5,000 sq ft", desc: "Standard residential lot size. Mowing & edging.", price: 40, dur: 45 },
+        { id: "lawn-m", label: "Medium Yard", sub: "5,000 – 10,000 sq ft", desc: "Typical suburban lot with larger backyard.", price: 60, dur: 60 },
+        { id: "lawn-l", label: "Large Yard", sub: "1/4 to 1/2 acre", desc: "Significant acreage requiring extra time.", price: 85.25, dur: 90 },
+        { id: "lawn-xl", label: "Very Large", sub: "1/2 acre +", desc: "Estate size lots or corner properties.", price: 120, dur: 120 }
+      ], frequency: true },
+    house: { name: "Residential House Cleaning", cat: "House cleaning & moving",
+      options: [
+        { id: "house-routine", label: "Routine maintenance", sub: "Regular upkeep clean", price: 125, from: true, dur: 135 },
+        { id: "house-deep", label: "Full interior deep clean", sub: "Top-to-bottom detail", price: 125, from: true, dur: 135 }
+      ], frequency: true, note: "House cleaning starts at $125. Final price depends on home size and is confirmed before work begins." },
+    mover: { name: "Personal Mover", cat: "House cleaning & moving",
+      options: [
+        { id: "mover-home", label: "Home move", sub: "Careful moving assistance", price: 125, dur: 135 },
+        { id: "mover-office", label: "Office move", sub: "Desks, files & equipment", price: 125, dur: 135 }
+      ] },
+    gutter: { name: "Gutter Cleaning", cat: "House cleaning & moving",
+      options: [ { id: "gutter", label: "Gutter Cleaning", sub: "Full debris removal and downspout check", price: 45, dur: 60 } ] },
+    windows: { name: "Window Cleaning", cat: "Window cleaning",
+      options: [
+        { id: "win-s-ext", label: "Small (Exterior)", sub: "Up to 7 exterior windows", price: 45, dur: 60 },
+        { id: "win-m-ext", label: "Medium (Exterior)", sub: "Up to 10 exterior windows", price: 65, dur: 90 },
+        { id: "win-m-full", label: "Medium (Full)", sub: "Up to 5 windows. In/Out/Trim.", price: 65, mint: true, dur: 90 },
+        { id: "win-l-full", label: "Large (Full)", sub: "Up to 7 windows. In/Out/Trim.", price: 85, mint: true, dur: 120 },
+        { id: "win-ext", label: "Individual windows (ext)", sub: "Any count, exterior only", unit: 6.5, qtyLabel: "Number of windows", dur: 90 },
+        { id: "win-full", label: "Full service (individual)", sub: "Any count, in/out/trim", unit: 13.75, qtyLabel: "Number of windows", dur: 120 }
+      ],
+      addons: [
+        { id: "track", label: "Deep track scrubbing", price: 15 },
+        { id: "hardwater", label: "Hard water removal", price: 25 },
+        { id: "screens", label: "Screen deep wash", price: 10 }
+      ] },
+    detail: { name: "Car Detailing", cat: "Car detailing",
+      options: [
+        { id: "sedan-std", label: "Sedan/Coupe · Standard Detail", sub: "Hand wash, vacuum, windows, rims & tires", price: 100, dur: 120 },
+        { id: "sedan-gold", label: "Sedan/Coupe · Gold Package", sub: "Standard + steam, leather, wax, engine bay", price: 150, dur: 210 },
+        { id: "suv-std", label: "SUV/Truck/Van · Standard Detail", sub: "Hand wash, vacuum, windows, rims & tires", price: 125, dur: 180 },
+        { id: "suv-gold", label: "SUV/Truck/Van · Gold Package", sub: "Standard + steam, leather, wax, engine bay", price: 185, dur: 300 }
+      ] },
+    pressure: { name: "Pressure Washing", cat: "Firehouse Deep Clean", quote: true,
+      options: [
+        { id: "pw-drive", label: "Driveway", sub: "Concrete · degreasing & surface scrubbing", low: 150, high: 250, dur: 30 },
+        { id: "pw-siding", label: "House siding", sub: "Soft wash · low-pressure algae removal", low: 250, high: 450, dur: 30 },
+        { id: "pw-other", label: "Patio, walkway or other", sub: "Minimum service $125", low: 125, dur: 30 }
+      ], note: "Pressure washing is quoted on-site. Book a 30-minute free walkthrough and you'll get a final price before any work starts." },
+    bins: { name: "Trash Can Sanitization", cat: "Curbside",
+      options: [ { id: "bins", label: "Bin cleaning", sub: "Sanitized, deodorized, high-heat power wash", unit: 15, qtyLabel: "Number of bins", qtyDefault: 2, dur: 45 } ],
+      frequency: true },
+    pet: { name: "Pet Waste Removal", cat: "Yard",
+      options: [ { id: "pet", label: "Full yard cleanup", sub: "Scooping, disposal, deodorizing, lawn-safe sanitizer", price: 36.25, dur: 45 } ],
+      frequency: true }
+  };
+  const FREQS = [["once", "One-time"], ["weekly", "Weekly"], ["biweekly", "Every 2 weeks"], ["monthly", "Monthly"]];
+  const STEP_NAMES = ["Choose service", "Pick a time", "Your details", "Review"];
+
+  // ---------- helpers ----------
+  const esc = t => String(t ?? "").replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+  const fmtDur = m => { const h = Math.floor(m / 60), r = m % 60; return [h ? `${h} hr${h > 1 ? "s" : ""}` : "", r ? `${r} min` : ""].filter(Boolean).join(" "); };
+  const fmtTime = d => d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  const fmtDay = (d, long) => d.toLocaleDateString(undefined, long ? { weekday: "long", month: "long", day: "numeric" } : { weekday: "short", month: "short", day: "numeric" });
+  const dayStart = d => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
+  const sameDay = (a, b) => dayStart(a).getTime() === dayStart(b).getTime();
+  const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+  const mondayOf = d => { const x = dayStart(d); const wd = (x.getDay() + 6) % 7; return addDays(x, -wd); };
+  const MAX_DAYS = 60;
+
+  function load(key, fallback) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; } }
+  function save(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); } catch (e) {} }
+  let appts = load(STORE, []);
+  const persist = () => { save(STORE, appts); renderBadges(); };
+
+  // ---------- live backend (Google Sheets) ----------
+  // With config.js filled in, bookings go to the owner's Google Sheet and the owner is emailed from Gmail.
+  // Without it, the app runs in demo mode and bookings stay in this browser.
+  const CFG = window.GILMORE_CONFIG || {};
+  const GS = CFG.googleScriptUrl || "";
+  const LIVE = !!GS;
+  // Google Sheets backend: plain-text POST keeps it a simple cross-site request.
+  async function gs(action, payload) {
+    try {
+      const r = await fetch(GS, { method: "POST", body: JSON.stringify(Object.assign({ action }, payload)) });
+      const j = await r.json();
+      return j.error ? { data: null, error: j.error } : { data: j.data, error: null };
+    } catch (e) {
+      return { data: null, error: { message: "Couldn't reach the booking system. Check your connection and try again." } };
+    }
+  }
+  const api = {
+    busy: (from, to) => gs("busy", { from, to }),
+    book: p => gs("book", { p }),
+    lookup: (refs, phone) => gs("lookup", { refs, phone }),
+    cancel: (ref, phone) => gs("cancel", { ref, phone }),
+    reschedule: (ref, phone, start) => gs("reschedule", { ref, phone, start })
+  };
+  let remoteBusy = [];  // [startMs, endMs] of every booked appointment, no customer details
+  async function loadBusy() {
+    if (!LIVE) return;
+    const from = new Date(), to = addDays(from, MAX_DAYS + 7);
+    const { data, error } = await api.busy(from.toISOString(), to.toISOString());
+    if (error) { console.error(error); return; }
+    remoteBusy = data.map(r => [new Date(r.start_at).getTime(), new Date(r.end_at).getTime()]);
+    renderBadges();
+    if (state && state.step === 1) render();
+  }
+  const isTaken = e => e && (e.code === "23P01" || /no_double_booking/.test(e.message || ""));
+
+
+  // ---------- availability ----------
+  // A slot is open when it starts at least an hour from now, fits before closing, and doesn't overlap a booked appointment.
+  function slotsFor(day, dur, ignoreRef) {
+    if (isClosedDay(day)) return [];
+    const earliest = Date.now() + LEAD_MIN * 60000;
+    const own = ignoreRef && appts.find(a => a.ref === ignoreRef);
+    const ownStart = own ? new Date(own.start).getTime() : null;
+    const busy = LIVE
+      ? remoteBusy.filter(([b0]) => b0 !== ownStart)
+      : appts.filter(a => a.status === "booked" && a.ref !== ignoreRef)
+        .map(a => [new Date(a.start).getTime(), new Date(a.start).getTime() + a.dur * 60000]);
+    const out = [];
+    for (let m = OPEN_MIN; m + dur <= CLOSE_MIN; m += STEP) {
+      const s = dayStart(day); s.setMinutes(m);
+      const t0 = s.getTime(), t1 = t0 + dur * 60000;
+      if (t0 < earliest) continue;
+      if (busy.some(([b0, b1]) => t0 < b1 && b0 < t1)) continue;
+      out.push(s);
+    }
+    return out;
+  }
+  function nextAvailable(dur) {
+    const today = dayStart(new Date());
+    for (let i = 0; i < MAX_DAYS; i++) { const s = slotsFor(addDays(today, i), dur); if (s.length) return s[0]; }
+    return null;
+  }
+
+  // ---------- page chrome ----------
+  const countEl = document.getElementById("mycount");
+  function renderBadges() {
+    const up = appts.filter(a => a.status === "booked" && new Date(a.start) > new Date()).length;
+    countEl.textContent = up;
+    const n = nextAvailable(60);
+    document.getElementById("next-open").textContent = n ? `${sameDay(n, new Date()) ? "Today" : fmtDay(n)} · ${fmtTime(n)}` : "Call to book";
+    const now = new Date(), h = document.getElementById("today-hours");
+    const openNow = !isClosedDay(now) && now.getHours() * 60 + now.getMinutes() >= OPEN_MIN && now.getHours() * 60 + now.getMinutes() < CLOSE_MIN;
+    h.textContent = openNow ? "Open now · until 6:00 PM" : isClosedDay(now) ? "Closed today · Mon–Sat 8 AM–6 PM" : "Mon–Sat · 8:00 AM – 6:00 PM";
+    h.classList.toggle("open", openNow);
+  }
+
+  const lawnGrid = document.getElementById("lawn-grid");
+  SERVICES.lawn.options.forEach(o => {
+    lawnGrid.insertAdjacentHTML("beforeend",
+      `<div class="card"><h3>${o.label}</h3><span class="sub" style="color:var(--green)">${o.sub}</span><p class="desc">${o.desc}</p>
+       <div class="foot"><span class="price num">${money(o.price)}</span><button class="link" data-book="lawn" data-opt="${o.id}">Book</button></div></div>`);
+  });
+  const winGrid = document.getElementById("win-grid");
+  SERVICES.windows.options.filter(o => o.price).forEach(o => {
+    winGrid.insertAdjacentHTML("beforeend",
+      `<div class="card${o.mint ? " mint" : ""}"><h3>${o.label}</h3><p class="desc">${o.sub}</p>
+       <div class="foot"><span class="price num">${money(o.price)}</span><button class="link"${o.mint ? ' style="color:var(--green)"' : ""} data-book="windows" data-opt="${o.id}">Book</button></div></div>`);
+  });
+
+  // ---------- sheet ----------
+  const root = document.getElementById("sheet-root");
+  let state = null;   // booking flow
+  let view = null;    // "mine" | "pick" when a list sheet is open
+  let mineTab = "upcoming", confirmCancel = null, mineError = null;
+
+  function openSheet(html, fresh, labelId) {
+    root.innerHTML = `<div class="scrim${fresh ? " anim" : ""}" data-scrim><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="${labelId}">${html}</div></div>`;
+    document.body.style.overflow = "hidden";
+  }
+  function close() { root.innerHTML = ""; state = null; view = null; confirmCancel = null; document.body.style.overflow = ""; }
+  const isOpen = () => !!root.innerHTML;
+
+  function startBooking(svcKey, optId, fromAppt) {
+    const svc = SERVICES[svcKey];
+    const opt = svc.options.find(o => o.id === optId) || svc.options[0];
+    const fresh = !isOpen();
+    view = null;
+    state = { svcKey, svc, step: 0, optId: opt.id, qty: opt.qtyDefault || (opt.unit ? 10 : 1), addons: [], freq: "once",
+      day: null, slot: null, weekStart: mondayOf(new Date()), contact: Object.assign({ name: "", phone: "", email: "", address: "", notes: "" }, load(CONTACT, {})),
+      errors: {}, reschedule: null };
+    if (fromAppt) { state.qty = fromAppt.qty || state.qty; state.addons = fromAppt.addonIds || []; state.freq = fromAppt.freq || "once"; }
+    render(fresh);
+  }
+  function startReschedule(ref) {
+    const a = appts.find(x => x.ref === ref); if (!a) return;
+    const svc = SERVICES[a.svcKey];
+    view = null;
+    state = { svcKey: a.svcKey, svc, step: 1, optId: a.optId, qty: a.qty, addons: a.addonIds || [], freq: a.freq, day: null, slot: null,
+      weekStart: mondayOf(new Date(a.start) > new Date() ? new Date(a.start) : new Date()), contact: a.contact, errors: {}, reschedule: ref };
+    render(false);
+    loadBusy();
+  }
+
+  const currentOpt = () => state.svc.options.find(o => o.id === state.optId);
+  const currentDur = () => currentOpt().dur;
+  function pricing() {
+    const o = currentOpt();
+    const addons = (state.svc.addons || []).filter(a => state.addons.includes(a.id));
+    if (state.svc.quote) {
+      const label = o.high ? `${money(o.low)} – ${money(o.high)}` : `From ${money(o.low)}`;
+      return { label, addons, estimate: true };
+    }
+    const base = o.unit ? o.unit * state.qty : o.price;
+    const total = base + addons.reduce((s, a) => s + a.price, 0);
+    return { addons, label: (o.from ? "From " : "") + money(total), estimate: !!o.from };
+  }
+
+  function timeStep() {
+    const s = state, dur = currentDur();
+    const today = dayStart(new Date()), lastDay = addDays(today, MAX_DAYS - 1);
+    const days = [...Array(7)].map((_, i) => addDays(s.weekStart, i));
+    const monthLabel = days[3].toLocaleDateString(undefined, { month: "long", year: "numeric" });
+    let html = `<div class="group"><div class="cal-head"><b>${monthLabel}</b><span class="dur">⏱ ${fmtDur(dur)}</span>
+      <div class="cal-nav"><button type="button" data-week="-1" aria-label="Previous week" ${s.weekStart <= mondayOf(today) ? "disabled" : ""}>‹</button>
+      <button type="button" data-week="1" aria-label="Next week" ${addDays(s.weekStart, 7) > lastDay ? "disabled" : ""}>›</button></div></div>
+      <div class="week">` + days.map(d => {
+        const avail = d >= today && d <= lastDay ? slotsFor(d, dur, s.reschedule).length : 0;
+        const on = s.day && sameDay(s.day, d);
+        return `<button type="button" class="date${on ? " on" : ""}" data-day="${d.toISOString()}" ${avail ? "" : "disabled"} aria-label="${fmtDay(d, true)}${avail ? "" : ", unavailable"}">
+          <small>${d.toLocaleDateString(undefined, { weekday: "short" })}</small><b class="num">${d.getDate()}</b><span class="dot"></span></button>`;
+      }).join("") + `</div><span class="hint">Open Monday to Saturday, 8:00 AM to 6:00 PM. Green dots mark days with openings.</span></div>`;
+    if (!s.day) {
+      html += `<div class="note">Pick a day to see open times.</div>`;
+    } else {
+      const slots = slotsFor(s.day, dur, s.reschedule);
+      const groups = [["Morning", x => x.getHours() < 12], ["Afternoon", x => x.getHours() >= 12 && x.getHours() < 17], ["Evening", x => x.getHours() >= 17]];
+      html += groups.map(([name, f]) => {
+        const list = slots.filter(f); if (!list.length) return "";
+        return `<div class="slotgroup"><h4>${name}</h4><div class="times four">` + list.map(t =>
+          `<button type="button" class="time num${s.slot && s.slot.getTime() === t.getTime() ? " on" : ""}" data-slot="${t.toISOString()}">${fmtTime(t)}</button>`).join("") + `</div></div>`;
+      }).join("") || `<div class="note">No openings left this day. Try another day.</div>`;
+      if (s.slot) {
+        const end = new Date(s.slot.getTime() + dur * 60000);
+        html += `<span class="hint num">${fmtDay(s.slot, true)}, ${fmtTime(s.slot)} – ${fmtTime(end)}</span>`;
+      }
+    }
+    return html;
+  }
+
+  function render(fresh) {
+    const s = state, svc = s.svc, p = pricing(), o = currentOpt();
+    let body = "";
+    if (s.step === 0) {
+      body += svc.note ? `<div class="note">${svc.note}</div>` : "";
+      body += `<div class="group"><span class="lbl">${svc.quote ? "What needs washing?" : "Option"}</span>` +
+        svc.options.map(x => {
+          const price = svc.quote ? (x.high ? `$${x.low}–$${x.high}` : `From $${x.low}`) : x.unit ? `${money(x.unit)}/ea` : (x.from ? "From " : "") + money(x.price);
+          return `<label class="opt${x.id === s.optId ? " on" : ""}"><input type="radio" name="opt" value="${x.id}" ${x.id === s.optId ? "checked" : ""}>
+            <span class="t"><b>${x.label}</b><span>${x.sub} · ${svc.quote ? "Free visit, " : ""}${fmtDur(x.dur)}</span></span><span class="p num">${price}</span></label>`;
+        }).join("") + `</div>`;
+      if (o.unit) {
+        body += `<div class="group"><span class="lbl">${o.qtyLabel}</span>
+          <div class="stepper"><button type="button" data-q="-1" aria-label="Fewer">−</button><output class="num">${s.qty}</output><button type="button" data-q="1" aria-label="More">+</button>
+          <span class="hint num">${s.qty} × ${money(o.unit)} = ${money(o.unit * s.qty)}</span></div></div>`;
+      }
+      if (svc.addons) {
+        body += `<div class="group"><span class="lbl">Add-ons</span>` + svc.addons.map(a =>
+          `<label class="opt${s.addons.includes(a.id) ? " on" : ""}"><input type="checkbox" name="addon" value="${a.id}" ${s.addons.includes(a.id) ? "checked" : ""}>
+            <span class="t"><b>${a.label}</b></span><span class="p num">+${money(a.price)}</span></label>`).join("") + `</div>`;
+      }
+      if (svc.frequency) {
+        body += `<div class="group"><span class="lbl">How often</span><div class="times">` + FREQS.map(([k, l]) =>
+          `<button type="button" class="time${s.freq === k ? " on" : ""}" data-freq="${k}">${l}</button>`).join("") + `</div>
+          ${s.freq !== "once" ? `<span class="hint">Recurring visits are billed per visit at the price shown. You pick the first visit next.</span>` : ""}</div>`;
+      }
+    } else if (s.step === 1) {
+      body += s.takenNote ? `<div class="note" style="background:var(--red-soft)">Sorry, someone just booked that time. Please pick another.</div>` : "";
+      body += s.reschedule ? `<div class="note">Pick a new time for your ${esc(svc.name.toLowerCase())}. Your current slot stays held until you save.</div>` : "";
+      body += timeStep();
+      if (s.reschedule && s.submitError) body += `<div class="note" style="background:var(--red-soft)">${esc(s.submitError)}</div>`;
+    } else if (s.step === 2) {
+      const c = s.contact, e = s.errors;
+      const f = (id, label, type, ph, extra = "") => `<div class="field"><label for="f-${id}">${label}</label>
+        <input id="f-${id}" name="${id}" type="${type}" placeholder="${ph}" value="${esc(c[id])}" ${extra}>${e[id] ? `<span class="err">${e[id]}</span>` : ""}</div>`;
+      body += f("name", "Full name", "text", "Jordan Smith", 'autocomplete="name"');
+      body += `<div class="two">${f("phone", "Phone", "tel", "(555) 123-4567", 'autocomplete="tel"')}${f("email", "Email (optional)", "email", "you@example.com", 'autocomplete="email"')}</div>`;
+      body += f("address", "Service address", "text", "Street, city, ZIP", 'autocomplete="street-address"');
+      body += `<div class="field"><label for="f-notes">Notes for the crew (optional)</label><textarea id="f-notes" name="notes" rows="3" placeholder="Gate code, pets, parking, anything we should know">${esc(c.notes)}</textarea></div>`;
+    } else if (s.step === 3) {
+      const end = new Date(s.slot.getTime() + o.dur * 60000);
+      body += `<div class="summary">
+        <div class="r"><span>Service</span><b>${svc.name}</b></div>
+        <div class="r"><span>Option</span><b>${o.label}${o.unit ? ` × ${s.qty}` : ""}</b></div>
+        ${p.addons.map(a => `<div class="r"><span>Add-on</span><b class="num">${a.label} +${money(a.price)}</b></div>`).join("")}
+        ${svc.frequency ? `<div class="r"><span>Frequency</span><b>${FREQS.find(f => f[0] === s.freq)[1]}</b></div>` : ""}
+        <div class="r"><span>${svc.quote ? "Quote visit" : "When"}</span><b class="num">${fmtDay(s.slot, true)}<br>${fmtTime(s.slot)} – ${fmtTime(end)}</b></div>
+        <div class="r"><span>Contact</span><b>${esc(s.contact.name)}<br>${esc(s.contact.phone)}</b></div>
+        <div class="r"><span>Address</span><b>${esc(s.contact.address)}</b></div>
+        <div class="r tot"><span>${svc.quote ? "Estimated range" : p.estimate ? "Starting price" : "Total"}</span><b class="num">${p.label}</b></div>
+      </div>
+      ${s.submitError ? `<div class="note" style="background:var(--red-soft)">${esc(s.submitError)}</div>` : ""}
+      <span class="hint">No payment is taken now. You pay after the job is done. Free to cancel or reschedule from My appointments.</span>`;
+    } else if (s.step === 4) {
+      const a = appts.find(x => x.ref === s.ref);
+      body = `<div class="done"><div class="tick">✓</div><h2>${s.rescheduled ? "Appointment moved" : svc.quote ? "Quote visit booked" : "You're booked"}</h2>
+        <p>Gilmore Cleaning Services will text ${esc(s.contact.phone)} to confirm before the visit.</p></div>${apptCard(a, false)}`;
+    }
+
+    const steps = s.step < 4 && !s.reschedule ? `<div class="steps">${[0, 1, 2, 3].map(i => `<div class="${i <= s.step ? "on" : ""}"></div>`).join("")}</div>
+      <span class="steplabel">Step ${s.step + 1} of 4 · ${STEP_NAMES[s.step]}</span>` : "";
+
+    let foot;
+    if (s.step === 4) foot = `<button class="btn ghost" data-nav="mine" type="button">My appointments</button><button class="btn" data-nav="close" type="button">Done</button>`;
+    else if (s.reschedule) foot = `<div class="total"><small>New time</small><b class="num">${s.slot ? fmtDay(s.slot) + " · " + fmtTime(s.slot) : "Pick a time"}</b></div>
+      <div class="foot-btns"><button class="btn ghost" data-nav="mine" type="button">Back</button><button class="btn" data-nav="save-resched" type="button" ${s.slot ? "" : "disabled"}>Save new time</button></div>`;
+    else {
+      const canNext = s.step === 1 ? !!s.slot : true;
+      foot = `<div class="total"><small>${svc.quote ? "Estimate" : p.estimate ? "Starting at" : "Total"}</small><b class="num">${p.label}</b></div>
+        <div class="foot-btns">${s.step > 0 ? `<button class="btn ghost" data-nav="back" type="button">Back</button>` : ""}
+        <button class="btn" data-nav="next" type="button" ${canNext ? "" : "disabled"}>${s.step === 3 ? (svc.quote ? "Book quote visit" : "Confirm booking") : "Continue"}</button></div>`;
+    }
+
+    const bodyEl = root.querySelector(".sheet-body"), keep = bodyEl && !fresh ? bodyEl.scrollTop : 0;
+    openSheet(`<div class="sheet-head"><div class="row"><div><span class="eyebrow" style="color:var(--blue)">${s.reschedule ? "Reschedule" : svc.cat}</span><h2 id="sheet-title">${svc.name}</h2></div>
+      <button class="x" data-nav="close" aria-label="Close" type="button">×</button></div>${steps}</div>
+      <form class="sheet-body" novalidate>${body}</form><div class="sheet-foot">${foot}</div>`, fresh, "sheet-title");
+    if (keep) root.querySelector(".sheet-body").scrollTop = keep;
+  }
+
+  function validate() {
+    const c = state.contact, e = {};
+    if (!c.name.trim()) e.name = "Enter your name.";
+    if (c.phone.replace(/\D/g, "").length < 10) e.phone = "Enter a 10-digit phone number.";
+    if (c.email && !/^\S+@\S+\.\S+$/.test(c.email)) e.email = "Check the email address.";
+    if (!c.address.trim()) e.address = "Enter the address where we'll work.";
+    state.errors = e;
+    return !Object.keys(e).length;
+  }
+
+  function next() {
+    const s = state;
+    if (s.step === 1 && !s.slot) return;
+    if (s.step === 2 && !validate()) { render(); const first = root.querySelector(".err"); first && first.previousElementSibling.focus(); return; }
+    if (s.step === 2) save(CONTACT, { name: s.contact.name, phone: s.contact.phone, email: s.contact.email, address: s.contact.address });
+    if (s.step === 3) { confirmBooking(); return; }
+    s.step++; s.errors = {}; render();
+    if (s.step === 1) loadBusy();
+    const b = root.querySelector(".sheet-body"); b && (b.scrollTop = 0);
+  }
+
+  function busyButton(label) {
+    const b = root.querySelector('[data-nav="next"], [data-nav="save-resched"]');
+    if (b) { b.disabled = true; b.textContent = label; }
+  }
+  function slotTaken() {
+    state.step = 1; state.slot = null; state.takenNote = true;
+    loadBusy().then(render);
+  }
+
+  async function confirmBooking() {
+    const s = state, o = currentOpt(), p = pricing();
+    // Re-check the slot in case it was taken in the meantime.
+    if (!slotsFor(s.slot, o.dur, s.reschedule).some(t => t.getTime() === s.slot.getTime())) { slotTaken(); return; }
+    const a = { svcKey: s.svcKey, optId: s.optId, service: s.svc.name, option: o.label + (o.unit ? ` × ${s.qty}` : ""),
+      qty: s.qty, addonIds: s.addons, addons: p.addons.map(x => x.label), freq: s.freq, start: s.slot.toISOString(), dur: o.dur,
+      price: p.label, quote: !!s.svc.quote, contact: Object.assign({}, s.contact), status: "booked", made: Date.now() };
+    if (LIVE) {
+      busyButton("Booking…");
+      const end = new Date(s.slot.getTime() + o.dur * 60000);
+      const { data, error } = await api.book({
+        service_key: s.svcKey, service: a.service, option_id: s.optId, option_label: a.option, addons: a.addons,
+        frequency: s.freq, price_label: a.price, is_quote: a.quote, start_at: a.start, end_at: end.toISOString(),
+        customer_name: a.contact.name, customer_phone: a.contact.phone, customer_email: a.contact.email,
+        address: a.contact.address, notes: a.contact.notes });
+      if (error) {
+        if (isTaken(error)) { slotTaken(); return; }
+        s.submitError = error.message || "Something went wrong. Please try again."; render(); return;
+      }
+      a.ref = data;
+      remoteBusy.push([s.slot.getTime(), end.getTime()]);
+    } else {
+      a.ref = "GCS-" + Math.random().toString(36).slice(2, 7).toUpperCase();
+    }
+    appts.unshift(a); persist();
+    s.ref = a.ref; s.submitError = null; s.step = 4; render();
+    const b = root.querySelector(".sheet-body"); b && (b.scrollTop = 0);
+  }
+
+  async function saveReschedule() {
+    const s = state, a = appts.find(x => x.ref === s.reschedule);
+    if (!a || !s.slot) return;
+    if (LIVE) {
+      busyButton("Saving…");
+      const { data, error } = await api.reschedule(a.ref, a.contact.phone, s.slot.toISOString());
+      if (error || !data) {
+        if (isTaken(error)) { slotTaken(); return; }
+        s.submitError = (error && error.message) || "This appointment can no longer be changed. Call us to reschedule."; render(); return;
+      }
+      loadBusy();
+    }
+    a.start = s.slot.toISOString(); a.rescheduled = Date.now();
+    persist();
+    s.ref = a.ref; s.rescheduled = true; s.reschedule = null; s.submitError = null; s.step = 4; render();
+  }
+
+  async function cancelAppt(ref) {
+    const a = appts.find(x => x.ref === ref); if (!a) return;
+    if (LIVE) {
+      const { error } = await api.cancel(a.ref, a.contact.phone);
+      if (error) { mineError = error.message || "Couldn't cancel. Please call us."; confirmCancel = null; showMine(); return; }
+      loadBusy();
+    }
+    mineError = null;
+    a.status = "cancelled"; a.cancelled = Date.now();
+    confirmCancel = null; persist(); showMine();
+  }
+
+  // Pull the latest status of this device's appointments (the owner may have moved, completed or cancelled them).
+  async function syncMine() {
+    if (!LIVE || !appts.length) return;
+    const byPhone = {};
+    appts.forEach(a => { (byPhone[a.contact.phone] = byPhone[a.contact.phone] || []).push(a.ref); });
+    let changed = false;
+    for (const [phone, refs] of Object.entries(byPhone)) {
+      const { data, error } = await api.lookup(refs, phone);
+      if (error) continue;
+      data.forEach(r => {
+        const a = appts.find(x => x.ref === r.ref); if (!a) return;
+        const st = new Date(r.start_at).toISOString(), status = r.status === "completed" ? "booked" : r.status;
+        if (a.start !== st || a.status !== status) { a.start = st; a.status = status; changed = true; }
+      });
+    }
+    if (changed) { persist(); if (view === "mine") showMine(); }
+  }
+
+  // ---------- appointments ----------
+  function apptCard(a, withActions) {
+    if (!a) return "";
+    const st = new Date(a.start), end = new Date(st.getTime() + a.dur * 60000), past = end < new Date();
+    const status = a.status === "cancelled" ? `<span class="status cx">Cancelled</span>` : past ? `<span class="status past">Completed</span>` : `<span class="status up">${a.quote ? "Quote visit" : "Booked"}</span>`;
+    const freq = a.freq && a.freq !== "once" ? ` · ${FREQS.find(f => f[0] === a.freq)[1]}` : "";
+    let acts = "";
+    if (withActions) {
+      if (a.status === "booked" && !past) {
+        acts = confirmCancel === a.ref
+          ? `<div class="confirm-box">Cancel your ${esc(a.service.toLowerCase())} on ${fmtDay(st)}?<div class="acts"><button class="btn red" data-cancel-yes="${a.ref}" type="button">Yes, cancel it</button><button class="btn ghost" data-cancel-no type="button">Keep it</button></div></div>`
+          : `<div class="acts"><button class="btn ghost" data-resched="${a.ref}" type="button">Reschedule</button><button class="btn ghost" data-cancel="${a.ref}" type="button" style="color:var(--red)">Cancel</button></div>`;
+      } else {
+        acts = `<div class="acts"><button class="btn ghost" data-again="${a.ref}" type="button">Book again</button></div>`;
+      }
+    }
+    return `<div class="appt${a.status === "cancelled" ? " cancelled" : ""}">
+      <div class="when"><div class="cal"><small>${st.toLocaleDateString(undefined, { month: "short" })}</small><b class="num">${st.getDate()}</b></div>
+      <div class="info"><b>${esc(a.service)}</b><span>${esc(a.option)}${a.addons && a.addons.length ? " + " + esc(a.addons.join(", ")) : ""}</span>
+      <span class="num">${fmtDay(st)} · ${fmtTime(st)} – ${fmtTime(end)}${freq}</span><span class="num">${esc(a.price)} · ${a.ref}</span></div></div>
+      ${status}${acts}</div>`;
+  }
+
+  function showMine(fresh) {
+    state = null; view = "mine";
+    const now = new Date();
+    const up = appts.filter(a => a.status === "booked" && new Date(a.start).getTime() + a.dur * 60000 > now).sort((a, b) => new Date(a.start) - new Date(b.start));
+    const past = appts.filter(a => !up.includes(a)).sort((a, b) => new Date(b.start) - new Date(a.start));
+    const list = mineTab === "upcoming" ? up : past;
+    const items = list.length ? list.map(a => apptCard(a, true)).join("")
+      : `<div class="empty">${mineTab === "upcoming" ? "No upcoming appointments." : "Nothing here yet."}<br><button class="btn" style="margin-top:12px" data-nav="pick" type="button">Book a service</button></div>`;
+    openSheet(`<div class="sheet-head"><div class="row"><h2 id="mine-title">My appointments</h2><button class="x" data-nav="close" aria-label="Close" type="button">×</button></div>
+      <div class="tabs" role="tablist"><button type="button" role="tab" class="${mineTab === "upcoming" ? "on" : ""}" data-tab="upcoming" aria-selected="${mineTab === "upcoming"}">Upcoming (${up.length})</button>
+      <button type="button" role="tab" class="${mineTab === "past" ? "on" : ""}" data-tab="past" aria-selected="${mineTab === "past"}">Past &amp; cancelled</button></div></div>
+      <div class="sheet-body">${mineError ? `<div class="note" style="background:var(--red-soft)">${esc(mineError)}</div>` : ""}<div class="mylist">${items}</div><span class="hint">${LIVE ? "Showing appointments booked from this device." : "Appointments are saved on this device."}</span></div>`, fresh, "mine-title");
+  }
+
+  function showPicker(fresh) {
+    state = null; view = "pick";
+    const rows = Object.entries(SERVICES).map(([k, s]) => {
+      const prices = s.options.map(o => o.price ?? o.unit ?? o.low);
+      const min = Math.min(...prices), durs = s.options.map(o => o.dur);
+      const dmin = Math.min(...durs), dmax = Math.max(...durs);
+      const unit = s.options.every(o => o.unit) ? "/ea" : "";
+      return `<button type="button" data-book="${k}"><span><b>${s.name}</b><span>${s.quote ? "Free on-site quote · " : ""}${dmin === dmax ? fmtDur(dmin) : fmtDur(dmin) + " – " + fmtDur(dmax)}</span></span>
+        <span class="p num">${s.options.length > 1 || s.options[0].from || s.quote ? "From " : ""}${money(min)}${unit}</span></button>`;
+    }).join("");
+    openSheet(`<div class="sheet-head"><div class="row"><div><span class="eyebrow" style="color:var(--blue)">Gilmore Cleaning Services</span><h2 id="pick-title">Choose a service</h2></div>
+      <button class="x" data-nav="close" aria-label="Close" type="button">×</button></div></div>
+      <div class="sheet-body"><div class="svc-pick">${rows}</div></div>`, fresh, "pick-title");
+  }
+
+  // ---------- events ----------
+  document.addEventListener("click", ev => {
+    const t = ev.target;
+    const book = t.closest("[data-book]");
+    if (book) { startBooking(book.dataset.book, book.dataset.opt); return; }
+    if (t.closest("#mybook")) { mineTab = "upcoming"; showMine(!isOpen()); syncMine(); return; }
+    const nav = t.closest("[data-nav]");
+    if (nav) {
+      const a = nav.dataset.nav;
+      if (a === "close") close();
+      else if (a === "back") { state.step--; render(); }
+      else if (a === "next") next();
+      else if (a === "mine") { mineTab = "upcoming"; showMine(!isOpen()); syncMine(); }
+      else if (a === "pick") showPicker(!isOpen());
+      else if (a === "save-resched") saveReschedule();
+      return;
+    }
+    if (t.matches("[data-scrim]")) { close(); return; }
+    const tab = t.closest("[data-tab]"); if (tab) { mineTab = tab.dataset.tab; confirmCancel = null; showMine(); return; }
+    const c1 = t.closest("[data-cancel]"); if (c1) { confirmCancel = c1.dataset.cancel; showMine(); return; }
+    if (t.closest("[data-cancel-no]")) { confirmCancel = null; showMine(); return; }
+    const c2 = t.closest("[data-cancel-yes]");
+    if (c2) { c2.disabled = true; c2.textContent = "Cancelling…"; cancelAppt(c2.dataset.cancelYes); return; }
+    const rs = t.closest("[data-resched]"); if (rs) { startReschedule(rs.dataset.resched); return; }
+    const ag = t.closest("[data-again]");
+    if (ag) { const a = appts.find(x => x.ref === ag.dataset.again); if (a) startBooking(a.svcKey, a.optId, a); return; }
+    if (!state) return;
+    const q = t.closest("[data-q]");
+    if (q) { state.qty = Math.max(1, Math.min(60, state.qty + +q.dataset.q)); render(); return; }
+    const fr = t.closest("[data-freq]"); if (fr) { state.freq = fr.dataset.freq; render(); return; }
+    const wk = t.closest("[data-week]");
+    if (wk) { state.weekStart = addDays(state.weekStart, 7 * +wk.dataset.week); state.day = null; state.slot = null; render(); return; }
+    const dy = t.closest("[data-day]"); if (dy) { state.day = new Date(dy.dataset.day); state.slot = null; render(); return; }
+    const sl = t.closest("[data-slot]"); if (sl) { state.slot = new Date(sl.dataset.slot); state.takenNote = false; render(); return; }
+  });
+  document.addEventListener("change", ev => {
+    if (!state) return;
+    if (ev.target.name === "opt") {
+      state.optId = ev.target.value;
+      const o = currentOpt(); if (o.qtyDefault) state.qty = o.qtyDefault;
+      state.slot = null;
+      render();
+    } else if (ev.target.name === "addon") {
+      const id = ev.target.value;
+      state.addons = ev.target.checked ? [...state.addons, id] : state.addons.filter(x => x !== id);
+      render();
+    }
+  });
+  document.addEventListener("input", ev => {
+    if (!state || state.step !== 2) return;
+    const n = ev.target.name; if (n in state.contact) state.contact[n] = ev.target.value;
+  });
+  document.addEventListener("submit", ev => { ev.preventDefault(); if (state && state.step < 4 && !state.reschedule) next(); });
+  document.addEventListener("keydown", ev => { if (ev.key === "Escape" && isOpen()) close(); });
+
+  // Deep links: #book opens the service list, #appointments opens My appointments.
+  if (location.hash === "#book") showPicker(true);
+  else if (location.hash === "#appointments") showMine(true);
+
+  renderBadges();
+  loadBusy();
+  setInterval(() => { renderBadges(); loadBusy(); }, 60000);
+})();
+</script>
+</body>
+</html>
