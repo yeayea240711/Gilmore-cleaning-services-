@@ -2,5 +2,5 @@
 // Leave this empty and the app runs in demo mode (bookings stay on the customer's phone).
 window.GILMORE_CONFIG = {
   // The Web app URL you get from deploying google/Code.gs (see README).
-  googleScriptUrl: ""
+  googleScriptUrl: "https://script.google.com/macros/s/AKfycbxvyCaFmoMYNHrwJ1Bd_By-lF091cdmPHrXdn7NN07eVtI-sUXreL3JDOpA5O64sUyZ/exec"
 };
