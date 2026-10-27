@@ -130,6 +130,7 @@ section.svc { padding-block: 26px 6px; scroll-margin-top: 120px; }
 .btn.orange { background: var(--orange); }
 .btn.block { width: 100%; }
 .btn.ghost { background: var(--surface-2); color: var(--fg); border: 1px solid var(--line); }
+a.btn { display: inline-block; text-decoration: none; }
 .btn:disabled { opacity: .45; cursor: not-allowed; filter: none; }
 
 .checks { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 8px; font-size: 13.5px; color: var(--muted); }
@@ -639,6 +640,7 @@ img { max-width: 100%; }
     }
   }
   const api = {
+    settings: () => gs("settings", {}),
     busy: (from, to) => gs("busy", { from, to }),
     book: p => gs("book", { p }),
     lookup: (refs, phone) => gs("lookup", { refs, phone }),
@@ -654,6 +656,19 @@ img { max-width: 100%; }
     remoteBusy = data.map(r => [new Date(r.start_at).getTime(), new Date(r.end_at).getTime()]);
     renderBadges();
     if (state && state.step === 1) render();
+  }
+  // Deposit settings come from the booking script, so the amount and rules live in one place.
+  let DEP = { deposit: 0 };
+  const needsDeposit = svc => LIVE && DEP.deposit > 0 && !svc.quote;
+  const payUrl = a => DEP.pay_link + "?client_reference_id=" + encodeURIComponent(a.ref) +
+    (a.contact.email ? "&prefilled_email=" + encodeURIComponent(a.contact.email) : "");
+  const depositRule = () => DEP.refund_early
+    ? `Cancel more than ${DEP.keep_hours} hours ahead and it's refunded. Cancel within ${DEP.keep_hours} hours and the deposit is kept.`
+    : "The deposit is not refunded if you cancel.";
+  async function loadSettings() {
+    if (!LIVE) return;
+    const { data } = await api.settings();
+    if (data) { DEP = data; if (state && state.step === 3) render(); }
   }
   const isTaken = e => e && (e.code === "23P01" || /no_double_booking/.test(e.message || ""));
 
@@ -842,8 +857,11 @@ img { max-width: 100%; }
         <div class="r"><span>Address</span><b>${esc(s.contact.address)}</b></div>
         <div class="r tot"><span>${svc.quote ? "Estimated range" : p.estimate ? "Starting price" : "Total"}</span><b class="num">${p.label}</b></div>
       </div>
+      ${needsDeposit(svc) ? `<div class="summary"><div class="r tot"><span>Deposit due now</span><b class="num">${money(DEP.deposit)}</b></div></div>` : ""}
       ${s.submitError ? `<div class="note" style="background:var(--red-soft)">${esc(s.submitError)}</div>` : ""}
-      <span class="hint">No payment is taken now. You pay after the job is done. Free to cancel or reschedule from My appointments.</span>`;
+      <span class="hint">${needsDeposit(svc)
+        ? `A ${money(DEP.deposit)} deposit holds your spot. It comes off what you owe after the job. ${depositRule()} You'll pay on Stripe's secure checkout page.`
+        : "No payment is taken now. You pay after the job is done. Free to cancel or reschedule from My appointments."}</span>`;
     } else if (s.step === 4) {
       const a = appts.find(x => x.ref === s.ref);
       body = `<div class="done"><div class="tick">✓</div><h2>${s.rescheduled ? "Appointment moved" : svc.quote ? "Quote visit booked" : "You're booked"}</h2>
@@ -861,7 +879,7 @@ img { max-width: 100%; }
       const canNext = s.step === 1 ? !!s.slot : true;
       foot = `<div class="total"><small>${svc.quote ? "Estimate" : p.estimate ? "Starting at" : "Total"}</small><b class="num">${p.label}</b></div>
         <div class="foot-btns">${s.step > 0 ? `<button class="btn ghost" data-nav="back" type="button">Back</button>` : ""}
-        <button class="btn" data-nav="next" type="button" ${canNext ? "" : "disabled"}>${s.step === 3 ? (svc.quote ? "Book quote visit" : "Confirm booking") : "Continue"}</button></div>`;
+        <button class="btn" data-nav="next" type="button" ${canNext ? "" : "disabled"}>${s.step === 3 ? (svc.quote ? "Book quote visit" : needsDeposit(svc) ? `Pay ${money(DEP.deposit)} deposit` : "Confirm booking") : "Continue"}</button></div>`;
     }
 
     const bodyEl = root.querySelector(".sheet-body"), keep = bodyEl && !fresh ? bodyEl.scrollTop : 0;
@@ -922,6 +940,13 @@ img { max-width: 100%; }
       }
       a.ref = data;
       remoteBusy.push([s.slot.getTime(), end.getTime()]);
+      if (needsDeposit(s.svc)) {
+        // The booking is held while they pay. Stripe sends them back to My appointments afterwards.
+        a.deposit = "Waiting"; appts.unshift(a); persist();
+        busyButton("Opening checkout…");
+        location.href = payUrl(a);
+        return;
+      }
     } else {
       a.ref = "GCS-" + Math.random().toString(36).slice(2, 7).toUpperCase();
     }
@@ -970,8 +995,8 @@ img { max-width: 100%; }
       if (error) continue;
       data.forEach(r => {
         const a = appts.find(x => x.ref === r.ref); if (!a) return;
-        const st = new Date(r.start_at).toISOString(), status = r.status === "completed" ? "booked" : r.status;
-        if (a.start !== st || a.status !== status) { a.start = st; a.status = status; changed = true; }
+        const st = new Date(r.start_at).toISOString(), status = r.status === "completed" ? "booked" : r.status, dep = r.deposit || "";
+        if (a.start !== st || a.status !== status || (a.deposit || "") !== dep) { a.start = st; a.status = status; a.deposit = dep; changed = true; }
       });
     }
     if (changed) { persist(); if (view === "mine") showMine(); }
@@ -981,13 +1006,21 @@ img { max-width: 100%; }
   function apptCard(a, withActions) {
     if (!a) return "";
     const st = new Date(a.start), end = new Date(st.getTime() + a.dur * 60000), past = end < new Date();
-    const status = a.status === "cancelled" ? `<span class="status cx">Cancelled</span>` : past ? `<span class="status past">Completed</span>` : `<span class="status up">${a.quote ? "Quote visit" : "Booked"}</span>`;
+    const waiting = a.status === "booked" && a.deposit === "Waiting" && !past;
+    const status = a.status === "cancelled" ? `<span class="status cx">${a.deposit === "Expired" ? "Deposit not paid" : "Cancelled"}</span>` : past ? `<span class="status past">Completed</span>`
+      : waiting ? `<span class="status cx">Deposit due</span>` : `<span class="status up">${a.quote ? "Quote visit" : "Booked"}</span>`;
+    const depAmt = DEP.deposit ? money(DEP.deposit) + " deposit" : "Deposit";
+    const depNote = a.deposit === "Paid" ? ` · ${depAmt} paid` : a.deposit === "Refund due" ? ` · ${depAmt} being refunded` : a.deposit === "Kept" ? ` · ${depAmt} kept` : "";
     const freq = a.freq && a.freq !== "once" ? ` · ${FREQS.find(f => f[0] === a.freq)[1]}` : "";
     let acts = "";
     if (withActions) {
-      if (a.status === "booked" && !past) {
+      if (waiting && DEP.pay_link) {
+        acts = `<div class="confirm-box">Pay the ${depAmt} within ${DEP.hold_min} minutes of booking or this time is released.<div class="acts"><a class="btn" href="${payUrl(a)}">Pay ${depAmt}</a><button class="btn ghost" data-cancel-yes="${a.ref}" type="button" style="color:var(--red)">Cancel</button></div></div>`;
+      } else if (a.status === "booked" && !past) {
+        const keep = a.deposit === "Paid" ? (DEP.refund_early && st - Date.now() >= DEP.keep_hours * 3600000
+          ? ` Your ${depAmt} will be refunded.` : ` Your ${depAmt} won't be refunded.`) : "";
         acts = confirmCancel === a.ref
-          ? `<div class="confirm-box">Cancel your ${esc(a.service.toLowerCase())} on ${fmtDay(st)}?<div class="acts"><button class="btn red" data-cancel-yes="${a.ref}" type="button">Yes, cancel it</button><button class="btn ghost" data-cancel-no type="button">Keep it</button></div></div>`
+          ? `<div class="confirm-box">Cancel your ${esc(a.service.toLowerCase())} on ${fmtDay(st)}?${keep}<div class="acts"><button class="btn red" data-cancel-yes="${a.ref}" type="button">Yes, cancel it</button><button class="btn ghost" data-cancel-no type="button">Keep it</button></div></div>`
           : `<div class="acts"><button class="btn ghost" data-resched="${a.ref}" type="button">Reschedule</button><button class="btn ghost" data-cancel="${a.ref}" type="button" style="color:var(--red)">Cancel</button></div>`;
       } else {
         acts = `<div class="acts"><button class="btn ghost" data-again="${a.ref}" type="button">Book again</button></div>`;
@@ -996,7 +1029,7 @@ img { max-width: 100%; }
     return `<div class="appt${a.status === "cancelled" ? " cancelled" : ""}">
       <div class="when"><div class="cal"><small>${st.toLocaleDateString(undefined, { month: "short" })}</small><b class="num">${st.getDate()}</b></div>
       <div class="info"><b>${esc(a.service)}</b><span>${esc(a.option)}${a.addons && a.addons.length ? " + " + esc(a.addons.join(", ")) : ""}</span>
-      <span class="num">${fmtDay(st)} · ${fmtTime(st)} – ${fmtTime(end)}${freq}</span><span class="num">${esc(a.price)} · ${a.ref}</span></div></div>
+      <span class="num">${fmtDay(st)} · ${fmtTime(st)} – ${fmtTime(end)}${freq}</span><span class="num">${esc(a.price)} · ${a.ref}${depNote}</span></div></div>
       ${status}${acts}</div>`;
   }
 
@@ -1085,10 +1118,14 @@ img { max-width: 100%; }
   document.addEventListener("keydown", ev => { if (ev.key === "Escape" && isOpen()) close(); });
 
   // Deep links: #book opens the service list, #appointments opens My appointments.
+  // Stripe's checkout sends customers back to ?deposit=paid#appointments.
+  const backFromPay = /[?&]deposit=paid/.test(location.search);
+  if (backFromPay) history.replaceState(null, "", location.pathname + "#appointments");
   if (location.hash === "#book") showPicker(true);
   else if (location.hash === "#appointments") showMine(true);
 
   renderBadges();
+  loadSettings().then(() => { if (view === "mine") showMine(); if (backFromPay) syncMine(); });
   loadBusy();
   setInterval(() => { renderBadges(); loadBusy(); }, 60000);
 })();
