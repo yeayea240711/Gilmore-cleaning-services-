@@ -29,3 +29,13 @@ Business hours are Mon–Sat, 8:00 AM to 6:00 PM. To change them, edit `OPEN_MIN
 5. **Copy the Web app URL** that ends in `/exec` and put it in `config.js` as `googleScriptUrl`.
 
 If you change `Code.gs` later, use **Deploy → Manage deployments → Edit → New version** so the link stays the same.
+
+## Photos
+
+The photos in `img/` are free stock photos from [Unsplash](https://unsplash.com/license) (free to use, no credit required). They are cropped and resized to 1400 pixels wide so they stay sharp on phones and big screens but still load fast.
+
+- `pressure.jpg`: https://unsplash.com/photos/kQHsQmLLV2I
+- `bins.jpg`: https://unsplash.com/photos/8VOZZC1VNnU
+- `pet.jpg`: https://unsplash.com/photos/DZ3ixpNPt7c
+
+To use your own photo instead, replace the file with one of the same name.
