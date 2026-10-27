@@ -71,6 +71,7 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; 
 .bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 12px; }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--fg); min-width: 0; }
 .mark { width: 36px; height: 36px; border-radius: 10px; background: var(--blue); color: var(--on-accent); display: grid; place-items: center; font-weight: 800; font-size: 17px; flex: none; }
+.mark-logo { height: 32px; width: auto; flex: none; border-radius: 4px; display: block; }
 .brand b { display: block; font-size: 15px; line-height: 1.15; }
 .brand small { display: block; color: var(--muted); font-size: 12px; }
 .mybook { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 8px 14px; font-weight: 600; font-size: 13px; cursor: pointer; white-space: nowrap; display: flex; gap: 6px; align-items: center; }
@@ -267,6 +268,7 @@ footer.site a { color: var(--blue); font-weight: 600; text-decoration: none; }
 .pbody { padding: 0 20px 20px; display: grid; gap: 16px; }
 .pid { display: flex; gap: 14px; align-items: flex-end; margin-top: -30px; }
 .avatar { width: 76px; height: 76px; flex: none; border-radius: 20px; background: var(--blue); color: var(--on-accent); display: grid; place-items: center; font-size: 34px; font-weight: 800; border: 4px solid var(--surface); }
+.avatar.logo { width: 160px; height: auto; background: #fff; padding: 6px; object-fit: contain; }
 .profile h1 { font-size: clamp(21px, 4vw, 28px); font-weight: 800; letter-spacing: -.02em; line-height: 1.15; }
 .tagline { color: var(--muted); font-size: 14px; }
 .pmeta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
@@ -340,7 +342,7 @@ img { max-width: 100%; }
   <div class="wrap">
     <div class="bar">
       <a class="brand" href="#top">
-        <span class="mark">G</span>
+        <img class="mark-logo" src="img/logo-mark.png" alt="GCS" width="109" height="32">
         <span><b>Gilmore Cleaning Services</b><small>Home, yard &amp; auto care</small></span>
       </a>
       <button class="mybook" id="mybook" type="button">My appointments <span class="count num" id="mycount">0</span></button>
@@ -366,7 +368,7 @@ img { max-width: 100%; }
     </div>
     <div class="pbody">
       <div class="pid">
-        <span class="avatar">G</span>
+        <img class="avatar logo" src="img/logo.png" alt="Gilmore Cleaning Services logo" width="160" height="129">
         <div style="min-width:0">
           <h1>Gilmore Cleaning Services</h1>
           <p class="tagline">Lawn care, house cleaning, windows, detailing, pressure washing and more.</p>
