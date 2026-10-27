@@ -263,12 +263,15 @@ main { padding-block: 20px 48px; display: grid; gap: 18px; }
     if (dayKey(d) === dayKey(tm)) return "Tomorrow, " + d.toLocaleDateString(undefined, { month: "long", day: "numeric" });
     return fmtDay(d);
   }
+  const DEPOSIT = { "Paid": ["Deposit paid", "g"], "Waiting": ["Waiting for deposit", "o"], "Refund due": ["Refund deposit in Stripe", "o"],
+    "Kept": ["Deposit kept", "x"], "Expired": ["Deposit never paid", "x"] };
   function card(r) {
     const st = new Date(r.start_at), en = new Date(r.end_at), past = en <= new Date();
     const mins = Math.round((en - st) / 60000), dur = `${Math.floor(mins / 60) ? Math.floor(mins / 60) + " hr " : ""}${mins % 60 ? mins % 60 + " min" : ""}`.trim();
     const badges = [
       r.status === "cancelled" ? `<span class="badge x">Cancelled</span>` : r.status === "completed" ? `<span class="badge g">Done</span>` : past ? `<span class="badge x">Not marked done</span>` : `<span class="badge">Booked</span>`,
       r.is_quote ? `<span class="badge o">Free quote visit</span>` : "",
+      DEPOSIT[r.deposit] ? `<span class="badge ${DEPOSIT[r.deposit][1]}">${DEPOSIT[r.deposit][0]}</span>` : "",
       r.frequency && r.frequency !== "once" ? `<span class="badge">${FREQ[r.frequency] || esc(r.frequency)}</span>` : ""
     ].join("");
     let acts = "";

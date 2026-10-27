@@ -30,6 +30,22 @@ Business hours are Mon–Sat, 8:00 AM to 6:00 PM. To change them, edit `OPEN_MIN
 
 If you change `Code.gs` later, use **Deploy → Manage deployments → Edit → New version** so the link stays the same.
 
+## Deposits (optional)
+
+Customers pay a $20 deposit on Stripe's secure checkout page to hold their time. Nobody types card details into this site. The deposit comes off the bill after the job. If a customer cancels more than 24 hours ahead you get an email saying to refund it; closer than that, you keep it. Free quote visits don't need a deposit. An unpaid booking gives its time back after 30 minutes.
+
+You only get the **New booking** email once the deposit is paid. The Sheet's **Deposit** column and the owner page show where each one stands.
+
+To turn it on:
+
+1. **Make the payment link.** In Stripe, open **Payment Links → New**. Add a product named **Booking deposit** with a one-time price of **$20**. Under **After payment**, pick **Don't show confirmation page** and enter `https://yeayea240711.github.io/Gilmore-cleaning-services-/?deposit=paid#appointments`. Create it and copy the link (it starts with `https://buy.stripe.com/`).
+2. **Make a read-only key.** In Stripe, open **Developers → API keys → Create restricted key**. Name it **Gilmore Bookings**, set **Checkout Sessions** to **Read**, leave everything else as **None**, and create it. Copy the key (it starts with `rk_live_`).
+3. **Paste both into the script.** In Apps Script, paste the new `google/Code.gs` (keep your passcode), then put the link in `STRIPE_PAYMENT_LINK` and the key in `STRIPE_SECRET_KEY`. Press **Save**.
+4. **Run setup once.** In the function menu at the top, pick **setupDeposits** and press **Run**. Allow the permissions Google asks for. It checks the key and starts a payment check every 10 minutes.
+5. **Publish it.** Use **Deploy → Manage deployments → Edit → New version → Deploy**.
+
+To change the amount or the refund rule, edit `DEPOSIT_AMOUNT`, `DEPOSIT_REFUND_EARLY` and `DEPOSIT_KEEP_HOURS` near the top of `Code.gs` (and the Payment Link's price), then publish a new version.
+
 ## Photos
 
 The photos in `img/` are free stock photos from [Unsplash](https://unsplash.com/license) (free to use, no credit required). They are cropped and resized to 1400 pixels wide so they stay sharp on phones and big screens but still load fast.
