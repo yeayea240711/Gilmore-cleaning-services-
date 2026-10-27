@@ -65,7 +65,8 @@ const ACTIONS = {
       customer_email: cut_(p.customer_email, 160), address: cut_(p.address, 240), notes: cut_(p.notes, 1000),
       created_at: now, updated_at: now
     };
-    sheet_().appendRow(toRow_(rec));
+    const sh = sheet_(), row = sh.getLastRow() + 1;
+    sh.getRange(row, 1, 1, COLS.length).setNumberFormat('@').setValues([toRow_(rec)]);
     email_('New booking', rec);
     return ref;
   }),
@@ -140,7 +141,7 @@ function readAll_() {
   return sh.getRange(2, 1, n, COLS.length).getValues().map((v, i) => ({
     _row: i + 2, ref: String(v[13]), status: String(v[8]), service: String(v[1]), option_label: String(v[2]),
     customer_name: String(v[3]), customer_phone: String(v[4]), address: String(v[5]), notes: String(v[6]),
-    price_label: String(v[7]), customer_email: String(v[9]), addons: String(v[10]), frequency: String(v[11]),
+    price_label: typeof v[7] === 'number' ? '$' + v[7].toFixed(2) : String(v[7]), customer_email: String(v[9]), addons: String(v[10]), frequency: String(v[11]),
     is_quote: String(v[12]) === 'Yes', start: toMs_(v[14]), end: toMs_(v[15]), service_key: String(v[16]),
     option_id: String(v[17]), created_at: String(v[18]), updated_at: String(v[19])
   })).filter(r => r.ref);
@@ -154,7 +155,7 @@ function toRow_(r) {
 
 function save_(r) {
   r.updated_at = new Date().toISOString();
-  sheet_().getRange(r._row, 1, 1, COLS.length).setValues([toRow_(r)]);
+  sheet_().getRange(r._row, 1, 1, COLS.length).setNumberFormat('@').setValues([toRow_(r)]);
 }
 
 function overlaps_(start, end, ignoreRef) {
