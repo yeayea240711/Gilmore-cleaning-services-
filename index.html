@@ -155,6 +155,15 @@ a.btn { display: inline-block; text-decoration: none; }
 .vehicle .head span { color: var(--faint); font-size: 11.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; }
 .vehicle .btn { margin-top: 12px; }
 
+/* Mr. Earl video */
+.earl { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.earl video { display: block; width: 100%; height: auto; aspect-ratio: 9 / 16; background: #000; border-right: 3px solid var(--orange); }
+.earl .body { padding: 22px; display: flex; flex-direction: column; gap: 12px; justify-content: center; min-width: 0; }
+.earl h3 { font-size: 21px; font-weight: 800; letter-spacing: -.01em; }
+.earl p { color: var(--muted); font-size: 15px; }
+.earl .btn { align-self: flex-start; }
+@media (max-width: 600px) { .earl { grid-template-columns: minmax(0, 1fr); } .earl video { max-height: 78vh; border-right: 0; border-bottom: 3px solid var(--orange); } }
+
 /* Photo cards */
 .photo { display: grid; grid-template-columns: minmax(0, 36%) minmax(0, 1fr); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
 .photo + .photo { margin-top: 14px; }
@@ -384,6 +393,22 @@ img { max-width: 100%; }
         <button class="btn" type="button" data-nav="pick">Book now</button>
         <button class="btn ghost" type="button" data-nav="mine">My appointments</button>
         <a class="btn ghost" href="https://www.instagram.com/motivational_dezzy/" target="_blank" rel="noopener">Instagram</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Mr. Earl skit -->
+  <section class="svc c-orange" id="earl">
+    <div class="sec-head"><span class="eyebrow">Meet Mr. Earl</span><span class="tag">Turn your sound on</span></div>
+    <div class="earl">
+      <video controls playsinline preload="none" poster="img/mr-earl-poster.jpg" width="720" height="1280">
+        <source src="img/mr-earl.mp4" type="video/mp4">
+      </video>
+      <div class="body">
+        <h3>"Gilmore WHAT?"</h3>
+        <p>Mr. Earl had to turn his hearing aid all the way up for this one. Couches moved, lawns cut, windows shining: we take care of the work so you can sit back with a lemonade.</p>
+        <p><b>Tell 'em Earl sent ya.</b></p>
+        <button class="btn" type="button" data-nav="pick">Book now</button>
       </div>
     </div>
   </section>
