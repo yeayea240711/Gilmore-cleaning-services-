@@ -164,6 +164,21 @@ a.btn { display: inline-block; text-decoration: none; }
 .earl .btn { align-self: flex-start; }
 @media (max-width: 600px) { .earl { grid-template-columns: minmax(0, 1fr); } .earl video { max-height: 78vh; border-right: 0; border-bottom: 3px solid var(--orange); } }
 
+/* Fall offer banner (hidden by script after the offer ends) */
+.fall { margin-top: 20px; position: relative; overflow: hidden; border-radius: var(--radius); box-shadow: var(--shadow); color: #fff; background: #3a1d0c url('img/fall-leaves.jpg') 75% 62% / cover no-repeat; }
+.fall::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(14, 24, 48, .92) 0%, rgba(14, 24, 48, .78) 55%, rgba(14, 24, 48, .25) 100%); }
+.fall .in { position: relative; padding: 24px 22px; display: grid; gap: 10px; max-width: 560px; }
+.fall .kick { font-size: 12.5px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #ffc861; }
+.fall h2 { font-size: clamp(24px, 4.6vw, 34px); font-weight: 800; letter-spacing: -.02em; line-height: 1.1; }
+.fall h2 em { font-style: normal; color: #ffc861; }
+.fall p { color: rgba(255, 255, 255, .88); font-size: 15px; }
+.fall p b { color: #fff; }
+.fall .ends { justify-self: start; background: #ffc861; color: #1a1408; font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; padding: 5px 10px; border-radius: 999px; }
+.fall .acts { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 4px; }
+.fall .btn { background: var(--orange); }
+.fall small { color: rgba(255, 255, 255, .72); font-size: 12.5px; }
+@media (max-width: 600px) { .fall { background-position: 90% 58%; } .fall::before { background: linear-gradient(180deg, rgba(14, 24, 48, .05) 0%, rgba(14, 24, 48, .55) 22%, rgba(14, 24, 48, .9) 42%); } .fall .in { padding: 140px 18px 20px; } }
+
 /* Photo cards */
 .photo { display: grid; grid-template-columns: minmax(0, 36%) minmax(0, 1fr); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
 .photo + .photo { margin-top: 14px; }
@@ -393,6 +408,20 @@ img { max-width: 100%; }
         <button class="btn" type="button" data-nav="pick">Book now</button>
         <button class="btn ghost" type="button" data-nav="mine">My appointments</button>
         <a class="btn ghost" href="https://www.instagram.com/motivational_dezzy/" target="_blank" rel="noopener">Instagram</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Fall offer: shown only until the end of Nov 4, 2026 (see FALL_ENDS in the script) -->
+  <section class="fall" id="fall" aria-label="Fall offer" hidden>
+    <div class="in">
+      <span class="kick">Fall is here · Leaves down? We've got you</span>
+      <h2><em>FREE</em> gutter cleaning + leaf blowing for our first customer</h2>
+      <p>Then <b>50% off</b> for the next 3 customers. First come, first served.</p>
+      <span class="ends">One week only · Ends Nov 4</span>
+      <div class="acts">
+        <button class="btn" type="button" data-book="gutter" data-promo="FALL DEAL (gutters + leaf blowing).">Claim the fall deal</button>
+        <small>Book gutter cleaning and we'll add the leaf blowing.</small>
       </div>
     </div>
   </section>
@@ -737,6 +766,10 @@ img { max-width: 100%; }
     h.textContent = openNow ? "Open now · until 6:00 PM" : isClosedDay(now) ? "Closed today · Mon–Sat 8 AM–6 PM" : "Mon–Sat · 8:00 AM – 6:00 PM";
     h.classList.toggle("open", openNow);
   }
+
+  // Fall offer runs through the end of Nov 4, 2026, then hides itself
+  const FALL_ENDS = new Date(2026, 10, 5);
+  if (new Date() < FALL_ENDS) document.getElementById("fall").hidden = false;
 
   const lawnGrid = document.getElementById("lawn-grid");
   SERVICES.lawn.options.forEach(o => {
@@ -1091,7 +1124,12 @@ img { max-width: 100%; }
   document.addEventListener("click", ev => {
     const t = ev.target;
     const book = t.closest("[data-book]");
-    if (book) { startBooking(book.dataset.book, book.dataset.opt); return; }
+    if (book) {
+      startBooking(book.dataset.book, book.dataset.opt);
+      // Tag fall-deal bookings so they stand out in the bookings sheet and email
+      if (book.dataset.promo && !state.contact.notes.includes(book.dataset.promo)) state.contact.notes = (book.dataset.promo + " " + state.contact.notes).trim();
+      return;
+    }
     if (t.closest("#mybook")) { mineTab = "upcoming"; showMine(!isOpen()); syncMine(); return; }
     const nav = t.closest("[data-nav]");
     if (nav) {
