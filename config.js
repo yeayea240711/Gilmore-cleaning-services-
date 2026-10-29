@@ -5,5 +5,5 @@ window.GILMORE_CONFIG = {
   googleScriptUrl: "https://script.google.com/macros/s/AKfycbxvyCaFmoMYNHrwJ1Bd_By-lF091cdmPHrXdn7NN07eVtI-sUXreL3JDOpA5O64sUyZ/exec",
   // Ways customers can pay you after the job. Leave one empty ("") to hide it.
   cashApp: "$logisticsma12",   // your $cashtag
-  zelle: ""      // the phone number or email your Zelle uses
+  zelle: "(773) 510-5419"      // the phone number or email your Zelle uses
 };
