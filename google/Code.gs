@@ -14,6 +14,9 @@
  * Deposits (optional): fill in STRIPE_PAYMENT_LINK and STRIPE_SECRET_KEY below, then pick
  * setupDeposits in the function menu at the top and press Run once (see README).
  * Left blank, bookings work as before with no deposit.
+ *
+ * Customers can also send the deposit by Cash App or Zelle (set in config.js). Those don't
+ * report back, so you get an email to check for it and tap "Mark deposit paid" on the owner page.
  */
 
 const OWNER_PASSCODE = 'change-me';
@@ -26,11 +29,12 @@ const STRIPE_SECRET_KEY = '';     // a Stripe restricted key (rk_live_...) that 
 const DEPOSIT_AMOUNT = 20;        // dollars, must match the Payment Link's price
 const DEPOSIT_REFUND_EARLY = true; // true: refund when a customer cancels more than DEPOSIT_KEEP_HOURS ahead
 const DEPOSIT_KEEP_HOURS = 24;    // cancelling closer than this keeps the deposit
-const DEPOSIT_HOLD_MIN = 30;      // an unpaid booking gives its time back after this many minutes
+const DEPOSIT_HOLD_MIN = 30;      // an unpaid card booking gives its time back after this many minutes
+const PAY_BY_HAND = ['Cash App', 'Zelle']; // deposits you confirm yourself; their times stay held until you do
 
 const SHEET_NAME = 'Appointments';
 const COLS = ['When', 'Service', 'Option', 'Customer', 'Phone', 'Address', 'Notes', 'Price', 'Status',
-  'Email', 'Add-ons', 'Frequency', 'Quote visit', 'Ref', 'start_at', 'end_at', 'service_key', 'option_id', 'Booked at', 'Updated at', 'Deposit'];
+  'Email', 'Add-ons', 'Frequency', 'Quote visit', 'Ref', 'start_at', 'end_at', 'service_key', 'option_id', 'Booked at', 'Updated at', 'Deposit', 'Paid with'];
 const MAX_MS = 6 * 3600 * 1000;
 
 // ---------- web entry points ----------
@@ -68,7 +72,8 @@ function doPost(e) {
 const ACTIONS = {
   settings: () => ({
     deposit: depositsOn_() ? DEPOSIT_AMOUNT : 0, pay_link: depositsOn_() ? STRIPE_PAYMENT_LINK : '',
-    refund_early: DEPOSIT_REFUND_EARLY, keep_hours: DEPOSIT_KEEP_HOURS, hold_min: DEPOSIT_HOLD_MIN
+    refund_early: DEPOSIT_REFUND_EARLY, keep_hours: DEPOSIT_KEEP_HOURS, hold_min: DEPOSIT_HOLD_MIN,
+    manual_pay: depositsOn_()
   }),
 
   busy: b => {
@@ -87,6 +92,8 @@ const ACTIONS = {
     if (overlaps_(start, end, null)) throw err_('That time was just booked.', '23P01');
 
     const needsDeposit = depositsOn_() && !p.is_quote;
+    const payWith = needsDeposit ? (PAY_BY_HAND.indexOf(p.pay_with) >= 0 ? p.pay_with : 'Card') : '';
+    const byHand = payWith && payWith !== 'Card';
     const ref = 'GCS-' + Utilities.getUuid().replace(/-/g, '').slice(0, 6).toUpperCase();
     const now = new Date().toISOString();
     const rec = {
@@ -96,12 +103,15 @@ const ACTIONS = {
       frequency: cut_(p.frequency || 'once', 20), price_label: cut_(p.price_label, 40), is_quote: !!p.is_quote,
       customer_name: cut_(p.customer_name, 120), customer_phone: cut_(p.customer_phone, 40),
       customer_email: cut_(p.customer_email, 160), address: cut_(p.address, 240), notes: cut_(p.notes, 1000),
-      created_at: now, updated_at: now, deposit: needsDeposit ? 'Waiting' : ''
+      created_at: now, updated_at: now, deposit: byHand ? 'Check' : needsDeposit ? 'Waiting' : '', paid_with: payWith
     };
     const sh = sheet_(), row = sh.getLastRow() + 1;
+    // Sheets made before the 'Paid with' column need its heading.
+    if (!sh.getRange(1, COLS.length).getValue()) sh.getRange(1, COLS.length).setValue(COLS[COLS.length - 1]).setFontWeight('bold');
     sh.getRange(row, 1, 1, COLS.length).setNumberFormat('@').setValues([toRow_(rec)]);
-    // With a deposit, you're emailed once it's paid (see sweep_).
-    if (!needsDeposit) email_('New booking', rec);
+    // With a card deposit, you're emailed once it's paid (see sweep_).
+    if (byHand) email_('New booking (check ' + payWith + ' for the deposit)', rec);
+    else if (!needsDeposit) email_('New booking', rec);
     return ref;
   }),
 
@@ -120,6 +130,7 @@ const ACTIONS = {
     if (!r || r.status !== 'booked') return false;
     r.status = 'cancelled';
     if (r.deposit === 'Waiting') r.deposit = 'Not paid';
+    if (r.deposit === 'Check') r.deposit = 'Not confirmed';
     if (r.deposit === 'Paid') r.deposit = DEPOSIT_REFUND_EARLY && r.start - Date.now() >= DEPOSIT_KEEP_HOURS * 3600000 ? 'Refund due' : 'Kept';
     save_(r);
     // You only hear about a booking once its deposit is paid, so skip the email for unpaid ones.
@@ -150,9 +161,22 @@ const ACTIONS = {
       addons: r.addons ? r.addons.split(', ') : [], frequency: r.frequency, price_label: r.price_label,
       is_quote: r.is_quote, start_at: iso_(r.start), end_at: iso_(r.end), customer_name: r.customer_name,
       customer_phone: r.customer_phone, customer_email: r.customer_email, address: r.address, notes: r.notes,
-      created_at: r.created_at, deposit: r.deposit
+      created_at: r.created_at, deposit: r.deposit, paid_with: r.paid_with
     }));
   },
+
+  // You saw a Cash App or Zelle deposit come in.
+  owner_deposit: b => withLock_(() => {
+    owner_(b);
+    const r = readAll_().filter(x => x.ref === b.id)[0];
+    if (!r) throw err_('Appointment not found.');
+    // A customer who cancelled before you checked: same refund rule as a card deposit, counted from when they cancelled.
+    if (r.deposit === 'Check') r.deposit = 'Paid';
+    else if (r.deposit === 'Not confirmed') r.deposit = DEPOSIT_REFUND_EARLY && r.start - Date.parse(r.updated_at) >= DEPOSIT_KEEP_HOURS * 3600000 ? 'Refund due' : 'Kept';
+    else throw err_('This booking has no deposit waiting to be checked.');
+    save_(r);
+    return true;
+  }),
 
   owner_status: b => withLock_(() => {
     owner_(b);
@@ -173,7 +197,7 @@ function sheet_() {
     sh = ss.insertSheet(SHEET_NAME, 0);
     sh.getRange(1, 1, 1, COLS.length).setValues([COLS]).setFontWeight('bold');
     sh.setFrozenRows(1);
-    sh.getRange('A:U').setNumberFormat('@');
+    sh.getRange('A:V').setNumberFormat('@');
   }
   return sh;
 }
@@ -186,14 +210,15 @@ function readAll_() {
     customer_name: String(v[3]), customer_phone: String(v[4]), address: String(v[5]), notes: String(v[6]),
     price_label: typeof v[7] === 'number' ? '$' + v[7].toFixed(2) : String(v[7]), customer_email: String(v[9]), addons: String(v[10]), frequency: String(v[11]),
     is_quote: String(v[12]) === 'Yes', start: toMs_(v[14]), end: toMs_(v[15]), service_key: String(v[16]),
-    option_id: String(v[17]), created_at: String(v[18]), updated_at: String(v[19]), deposit: String(v[20] || '')
+    option_id: String(v[17]), created_at: String(v[18]), updated_at: String(v[19]), deposit: String(v[20] || ''),
+    paid_with: String(v[21] || '')
   })).filter(r => r.ref);
 }
 
 function toRow_(r) {
   return [whenLabel_(r.start, r.end), r.service, r.option_label, r.customer_name, r.customer_phone, r.address, r.notes,
     r.price_label, r.status, r.customer_email, r.addons, r.frequency, r.is_quote ? 'Yes' : 'No', r.ref,
-    iso_(r.start), iso_(r.end), r.service_key, r.option_id, r.created_at, r.updated_at, r.deposit || ''];
+    iso_(r.start), iso_(r.end), r.service_key, r.option_id, r.created_at, r.updated_at, r.deposit || '', r.paid_with || ''];
 }
 
 function save_(r) {
@@ -253,9 +278,11 @@ function depositLine_(r) {
   const amt = '$' + DEPOSIT_AMOUNT;
   return {
     'Paid': amt + ' paid (take it off the bill)',
-    'Refund due': amt + ' paid. Refund it in Stripe.',
+    'Refund due': amt + ' paid. Refund it in ' + (r.paid_with && r.paid_with !== 'Card' ? r.paid_with : 'Stripe') + '.',
     'Kept': amt + ' paid. Keep it (cancelled within ' + DEPOSIT_KEEP_HOURS + ' hours).',
-    'Not paid': 'not paid'
+    'Not paid': 'not paid',
+    'Check': amt + ' coming by ' + r.paid_with + '. When you see it, tap "Mark deposit paid" on your owner page.',
+    'Not confirmed': amt + ' by ' + r.paid_with + ' was never marked paid. If it did come in, tap "Mark deposit paid" on your owner page to see whether to refund it.'
   }[r.deposit] || '';
 }
 

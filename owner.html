@@ -180,7 +180,8 @@ main { padding-block: 20px 48px; display: grid; gap: 18px; }
   }
   const api = {
     list: since => gs("owner_list", { since }),
-    setStatus: (id, status) => gs("owner_status", { id, status })
+    setStatus: (id, status) => gs("owner_status", { id, status }),
+    markPaid: id => gs("owner_deposit", { id })
   };
 
   // ----- sign-in -----
@@ -224,7 +225,7 @@ main { padding-block: 20px 48px; display: grid; gap: 18px; }
   }
 
   async function setStatus(id, status) {
-    const { error } = await api.setStatus(id, status);
+    const { error } = status === "deposit" ? await api.markPaid(id) : await api.setStatus(id, status);
     if (error) { $("dash-err").hidden = false; $("dash-err").textContent = error.message; return; }
     confirmId = null; await load();
   }
@@ -264,21 +265,30 @@ main { padding-block: 20px 48px; display: grid; gap: 18px; }
     return fmtDay(d);
   }
   const DEPOSIT = { "Paid": ["Deposit paid", "g"], "Waiting": ["Waiting for deposit", "o"], "Refund due": ["Refund deposit in Stripe", "o"],
-    "Kept": ["Deposit kept", "x"], "Expired": ["Deposit never paid", "x"] };
+    "Kept": ["Deposit kept", "x"], "Expired": ["Deposit never paid", "x"], "Check": ["Check {with} for deposit", "o"], "Not confirmed": ["Deposit never marked paid", "x"] };
+  const byHand = r => r.paid_with && r.paid_with !== "Card";
+  function depBadge(r) {
+    const d = DEPOSIT[r.deposit]; if (!d) return "";
+    let label = d[0].replace("{with}", esc(r.paid_with || "Cash App or Zelle"));
+    if (byHand(r)) label = r.deposit === "Refund due" ? "Refund deposit in " + esc(r.paid_with) : r.deposit === "Paid" ? "Deposit paid by " + esc(r.paid_with) : label;
+    return `<span class="badge ${d[1]}">${label}</span>`;
+  }
   function card(r) {
     const st = new Date(r.start_at), en = new Date(r.end_at), past = en <= new Date();
     const mins = Math.round((en - st) / 60000), dur = `${Math.floor(mins / 60) ? Math.floor(mins / 60) + " hr " : ""}${mins % 60 ? mins % 60 + " min" : ""}`.trim();
     const badges = [
       r.status === "cancelled" ? `<span class="badge x">Cancelled</span>` : r.status === "completed" ? `<span class="badge g">Done</span>` : past ? `<span class="badge x">Not marked done</span>` : `<span class="badge">Booked</span>`,
       r.is_quote ? `<span class="badge o">Free quote visit</span>` : "",
-      DEPOSIT[r.deposit] ? `<span class="badge ${DEPOSIT[r.deposit][1]}">${DEPOSIT[r.deposit][0]}</span>` : "",
+      depBadge(r),
       r.frequency && r.frequency !== "once" ? `<span class="badge">${FREQ[r.frequency] || esc(r.frequency)}</span>` : ""
     ].join("");
     let acts = "";
     if (r.status === "booked") {
       acts = confirmId === r.id
         ? `<div class="confirm">Cancel ${esc(r.customer_name)}'s ${esc(r.service.toLowerCase())}? Let them know by phone or text.<div class="actions"><button class="btn red small" data-cancel-yes="${r.id}" type="button">Yes, cancel</button><button class="btn ghost small" data-cancel-no type="button">Keep it</button></div></div>`
-        : `<div class="actions"><button class="btn small" data-done="${r.id}" type="button">Mark done</button><button class="btn ghost small" data-cancel="${r.id}" type="button" style="color:var(--red)">Cancel</button></div>`;
+        : `<div class="actions">${r.deposit === "Check" ? `<button class="btn small" data-paid="${r.id}" type="button">Mark deposit paid</button>` : ""}<button class="btn small" data-done="${r.id}" type="button">Mark done</button><button class="btn ghost small" data-cancel="${r.id}" type="button" style="color:var(--red)">Cancel</button></div>`;
+    } else if (r.status === "cancelled" && r.deposit === "Not confirmed") {
+      acts = `<div class="actions"><button class="btn ghost small" data-paid="${r.id}" type="button">It came in: mark deposit paid</button></div>`;
     } else if (r.status === "completed") {
       acts = `<div class="actions"><button class="btn ghost small" data-undo="${r.id}" type="button">Undo done</button></div>`;
     }
@@ -312,6 +322,7 @@ main { padding-block: 20px 48px; display: grid; gap: 18px; }
   $("list").addEventListener("click", ev => {
     const t = ev.target;
     const d = t.closest("[data-done]"); if (d) { d.disabled = true; setStatus(d.dataset.done, "completed"); return; }
+    const pd = t.closest("[data-paid]"); if (pd) { pd.disabled = true; setStatus(pd.dataset.paid, "deposit"); return; }
     const u = t.closest("[data-undo]"); if (u) { u.disabled = true; setStatus(u.dataset.undo, "booked"); return; }
     const c = t.closest("[data-cancel]"); if (c) { confirmId = c.dataset.cancel; render(); return; }
     if (t.closest("[data-cancel-no]")) { confirmId = null; render(); return; }

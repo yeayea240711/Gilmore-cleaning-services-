@@ -694,11 +694,11 @@ img { max-width: 100%; }
   // Cash App and Zelle are for paying the job balance. Neither tells the site a payment came in.
   const CASHTAG = (CFG.cashApp || "").trim().replace(/^\$?/, "$"), ZELLE = (CFG.zelle || "").trim();
   const HAS_CASH = CASHTAG.length > 1, HAS_PAY = HAS_CASH || !!ZELLE;
-  const cashUrl = () => "https://cash.app/" + encodeURIComponent(CASHTAG);
-  function payBox(title) {
+  const cashUrl = amt => "https://cash.app/" + encodeURIComponent(CASHTAG) + (amt ? "/" + amt : "");
+  function payBox(title, amt) {
     if (!HAS_PAY) return "";
     return `<div class="pay"><b>${title}</b>
-      ${HAS_CASH ? `<div class="way"><span>Cash App <strong>${esc(CASHTAG)}</strong></span><a class="btn cash" href="${cashUrl()}" target="_blank" rel="noopener">Open Cash App</a></div>` : ""}
+      ${HAS_CASH ? `<div class="way"><span>Cash App <strong>${esc(CASHTAG)}</strong></span><a class="btn cash" href="${cashUrl(amt)}" target="_blank" rel="noopener">Open Cash App</a></div>` : ""}
       ${ZELLE ? `<div class="way"><span>Zelle <strong>${esc(ZELLE)}</strong></span><button class="btn ghost" type="button" data-copy="${esc(ZELLE)}">Copy</button></div>` : ""}
       <span class="hint">Put your booking number in the note so we know it's you.</span></div>`;
   }
@@ -738,6 +738,10 @@ img { max-width: 100%; }
   const depositRule = () => DEP.refund_early
     ? `Cancel more than ${DEP.keep_hours} hours ahead and it's refunded. Cancel within ${DEP.keep_hours} hours and the deposit is kept.`
     : "The deposit is not refunded if you cancel.";
+  // Cash App and Zelle don't tell the site a payment came in, so the owner marks those deposits paid by hand.
+  // They only show once the booking script supports that (manual_pay).
+  const payChoices = () => ["Card"].concat(DEP.manual_pay ? [HAS_CASH && "Cash App", ZELLE && "Zelle"].filter(Boolean) : []);
+  const byHand = s => needsDeposit(s.svc) && (s.payWith || "Card") !== "Card" && payChoices().includes(s.payWith);
   async function loadSettings() {
     if (!LIVE) return;
     const { data } = await api.settings();
@@ -935,8 +939,12 @@ img { max-width: 100%; }
         <div class="r tot"><span>${svc.quote ? "Estimated range" : p.estimate ? "Starting price" : "Total"}</span><b class="num">${p.label}</b></div>
       </div>
       ${needsDeposit(svc) ? `<div class="summary"><div class="r tot"><span>Deposit due now</span><b class="num">${money(DEP.deposit)}</b></div></div>` : ""}
+      ${needsDeposit(svc) && payChoices().length > 1 ? `<div class="group"><span class="lbl">Pay the deposit with</span><div class="times">` + payChoices().map(m =>
+        `<button type="button" class="time${(s.payWith || "Card") === m ? " on" : ""}" data-paywith="${m}">${m}</button>`).join("") + `</div></div>` : ""}
       ${s.submitError ? `<div class="note" style="background:var(--red-soft)">${esc(s.submitError)}</div>` : ""}
-      <span class="hint">${needsDeposit(svc)
+      <span class="hint">${byHand(s)
+        ? `A ${money(DEP.deposit)} deposit holds your spot. It comes off what you owe after the job. ${depositRule()} After you book, send it by ${s.payWith} with your booking number in the note. Your spot is held while we check for it.`
+        : needsDeposit(svc)
         ? `A ${money(DEP.deposit)} deposit holds your spot. It comes off what you owe after the job. ${depositRule()} You'll pay on Stripe's secure checkout page.`
         : "No payment is taken now. You pay after the job is done. Free to cancel or reschedule from My appointments."}</span>
       ${!svc.quote ? payBox("After the job, you can pay with") : ""}`;
@@ -944,7 +952,7 @@ img { max-width: 100%; }
       const a = appts.find(x => x.ref === s.ref);
       body = `<div class="done"><div class="tick">✓</div><h2>${s.rescheduled ? "Appointment moved" : svc.quote ? "Quote visit booked" : "You're booked"}</h2>
         <p>Gilmore Cleaning Services will text ${esc(s.contact.phone)} to confirm before the visit.</p></div>${apptCard(a, false)}
-        ${!svc.quote && a ? payBox(`Pay after the job · booking ${a.ref}`) : ""}`;
+        ${a && a.deposit === "Check" ? payBox(`Send your ${money(DEP.deposit)} deposit · booking ${a.ref}`, DEP.deposit) : !svc.quote && a ? payBox(`Pay after the job · booking ${a.ref}`) : ""}`;
     }
 
     const steps = s.step < 4 && !s.reschedule ? `<div class="steps">${[0, 1, 2, 3].map(i => `<div class="${i <= s.step ? "on" : ""}"></div>`).join("")}</div>
@@ -958,7 +966,7 @@ img { max-width: 100%; }
       const canNext = s.step === 1 ? !!s.slot : true;
       foot = `<div class="total"><small>${svc.quote ? "Estimate" : p.estimate ? "Starting at" : "Total"}</small><b class="num">${p.label}</b></div>
         <div class="foot-btns">${s.step > 0 ? `<button class="btn ghost" data-nav="back" type="button">Back</button>` : ""}
-        <button class="btn" data-nav="next" type="button" ${canNext ? "" : "disabled"}>${s.step === 3 ? (svc.quote ? "Book quote visit" : needsDeposit(svc) ? `Pay ${money(DEP.deposit)} deposit` : "Confirm booking") : "Continue"}</button></div>`;
+        <button class="btn" data-nav="next" type="button" ${canNext ? "" : "disabled"}>${s.step === 3 ? (svc.quote ? "Book quote visit" : byHand(s) ? "Book and send deposit" : needsDeposit(svc) ? `Pay ${money(DEP.deposit)} deposit` : "Confirm booking") : "Continue"}</button></div>`;
     }
 
     const bodyEl = root.querySelector(".sheet-body"), keep = bodyEl && !fresh ? bodyEl.scrollTop : 0;
@@ -1012,14 +1020,15 @@ img { max-width: 100%; }
         service_key: s.svcKey, service: a.service, option_id: s.optId, option_label: a.option, addons: a.addons,
         frequency: s.freq, price_label: a.price, is_quote: a.quote, start_at: a.start, end_at: end.toISOString(),
         customer_name: a.contact.name, customer_phone: a.contact.phone, customer_email: a.contact.email,
-        address: a.contact.address, notes: a.contact.notes });
+        address: a.contact.address, notes: a.contact.notes, pay_with: byHand(s) ? s.payWith : "Card" });
       if (error) {
         if (isTaken(error)) { slotTaken(); return; }
         s.submitError = error.message || "Something went wrong. Please try again."; render(); return;
       }
       a.ref = data;
       remoteBusy.push([s.slot.getTime(), end.getTime()]);
-      if (needsDeposit(s.svc)) {
+      if (byHand(s)) a.deposit = "Check";
+      else if (needsDeposit(s.svc)) {
         // The booking is held while they pay. Stripe sends them back to My appointments afterwards.
         a.deposit = "Waiting"; appts.unshift(a); persist();
         busyButton("Opening checkout…");
@@ -1087,7 +1096,7 @@ img { max-width: 100%; }
     const st = new Date(a.start), end = new Date(st.getTime() + a.dur * 60000), past = end < new Date();
     const waiting = a.status === "booked" && a.deposit === "Waiting" && !past;
     const status = a.status === "cancelled" ? `<span class="status cx">${a.deposit === "Expired" ? "Deposit not paid" : "Cancelled"}</span>` : past ? `<span class="status past">Completed</span>`
-      : waiting ? `<span class="status cx">Deposit due</span>` : `<span class="status up">${a.quote ? "Quote visit" : "Booked"}</span>`;
+      : waiting ? `<span class="status cx">Deposit due</span>` : a.status === "booked" && a.deposit === "Check" && !past ? `<span class="status cx">Checking deposit</span>` : `<span class="status up">${a.quote ? "Quote visit" : "Booked"}</span>`;
     const depAmt = DEP.deposit ? money(DEP.deposit) + " deposit" : "Deposit";
     const depNote = a.deposit === "Paid" ? ` · ${depAmt} paid` : a.deposit === "Refund due" ? ` · ${depAmt} being refunded` : a.deposit === "Kept" ? ` · ${depAmt} kept` : "";
     const freq = a.freq && a.freq !== "once" ? ` · ${FREQS.find(f => f[0] === a.freq)[1]}` : "";
@@ -1097,8 +1106,10 @@ img { max-width: 100%; }
         acts = `<div class="confirm-box">Pay the ${depAmt} within ${DEP.hold_min} minutes of booking or this time is released.<div class="acts"><a class="btn" href="${payUrl(a)}">Pay ${depAmt}</a><button class="btn ghost" data-cancel-yes="${a.ref}" type="button" style="color:var(--red)">Cancel</button></div></div>`;
       } else if (a.status === "booked" && !past) {
         const keep = a.deposit === "Paid" ? (DEP.refund_early && st - Date.now() >= DEP.keep_hours * 3600000
-          ? ` Your ${depAmt} will be refunded.` : ` Your ${depAmt} won't be refunded.`) : "";
-        acts = confirmCancel === a.ref
+          ? ` Your ${depAmt} will be refunded.` : ` Your ${depAmt} won't be refunded.`)
+          : a.deposit === "Check" ? ` If you already sent the ${depAmt}, we'll ${DEP.refund_early && st - Date.now() >= DEP.keep_hours * 3600000 ? "send it back" : "keep it, since it's within " + DEP.keep_hours + " hours"}.` : "";
+        if (a.deposit === "Check") acts = payBox(`Send your ${depAmt} · booking ${a.ref}`, DEP.deposit);
+        acts += confirmCancel === a.ref
           ? `<div class="confirm-box">Cancel your ${esc(a.service.toLowerCase())} on ${fmtDay(st)}?${keep}<div class="acts"><button class="btn red" data-cancel-yes="${a.ref}" type="button">Yes, cancel it</button><button class="btn ghost" data-cancel-no type="button">Keep it</button></div></div>`
           : `<div class="acts"><button class="btn ghost" data-resched="${a.ref}" type="button">Reschedule</button><button class="btn ghost" data-cancel="${a.ref}" type="button" style="color:var(--red)">Cancel</button></div>`;
       } else {
@@ -1191,6 +1202,7 @@ img { max-width: 100%; }
     const q = t.closest("[data-q]");
     if (q) { state.qty = Math.max(1, Math.min(60, state.qty + +q.dataset.q)); render(); return; }
     const fr = t.closest("[data-freq]"); if (fr) { state.freq = fr.dataset.freq; render(); return; }
+    const pw = t.closest("[data-paywith]"); if (pw) { state.payWith = pw.dataset.paywith; state.submitError = null; render(); return; }
     const wk = t.closest("[data-week]");
     if (wk) { state.weekStart = addDays(state.weekStart, 7 * +wk.dataset.week); state.day = null; state.slot = null; render(); return; }
     const dy = t.closest("[data-day]"); if (dy) { state.day = new Date(dy.dataset.day); state.slot = null; render(); return; }
