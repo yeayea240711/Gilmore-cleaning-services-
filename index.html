@@ -245,6 +245,13 @@ footer.site a { color: var(--blue); font-weight: 600; text-decoration: none; }
 .stepper button { width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); font-size: 18px; cursor: pointer; }
 .stepper output { min-width: 34px; text-align: center; font-weight: 800; font-size: 18px; }
 .hint { font-size: 12.5px; color: var(--muted); }
+.pay { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: grid; gap: 10px; }
+.pay > b { font-size: 14px; }
+.pay .way { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 14px; }
+.pay .way span { color: var(--muted); }
+.pay .way strong { color: var(--fg); overflow-wrap: anywhere; }
+.pay .btn { padding: 8px 14px; font-size: 13.5px; }
+.pay .cash { background: #00d54b; color: #04230f; }
 .note { background: var(--blue-soft); color: var(--fg); border-radius: 10px; padding: 10px 12px; font-size: 13px; }
 
 .dates { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
@@ -402,7 +409,7 @@ img { max-width: 100%; }
       <div class="pmeta">
         <div class="pm"><small>Hours</small><b id="today-hours">Mon–Sat · 8:00 AM – 6:00 PM</b></div>
         <div class="pm"><small>Next available</small><b class="num" id="next-open">—</b></div>
-        <div class="pm"><small>Payment</small><b>Pay after the job</b></div>
+        <div class="pm"><small>Payment</small><b id="pay-ways">Pay after the job</b></div>
       </div>
       <div class="pactions">
         <button class="btn" type="button" data-nav="pick">Book now</button>
@@ -586,6 +593,7 @@ img { max-width: 100%; }
     <b style="color:var(--fg)">Gilmore Cleaning Services</b>
     <span>Follow our work on Instagram: <a href="https://www.instagram.com/motivational_dezzy/" target="_blank" rel="noopener">@motivational_dezzy</a></span>
     <span>Prices shown are starting rates. Final pricing is confirmed before work begins.</span>
+    <span id="pay-foot" hidden></span>
     <span><a href="owner.html">Owner sign-in</a></span>
   </footer>
 </main>
@@ -683,6 +691,17 @@ img { max-width: 100%; }
   const CFG = window.GILMORE_CONFIG || {};
   const GS = CFG.googleScriptUrl || "";
   const LIVE = !!GS;
+  // Cash App and Zelle are for paying the job balance. Neither tells the site a payment came in.
+  const CASHTAG = (CFG.cashApp || "").trim().replace(/^\$?/, "$"), ZELLE = (CFG.zelle || "").trim();
+  const HAS_CASH = CASHTAG.length > 1, HAS_PAY = HAS_CASH || !!ZELLE;
+  const cashUrl = () => "https://cash.app/" + encodeURIComponent(CASHTAG);
+  function payBox(title) {
+    if (!HAS_PAY) return "";
+    return `<div class="pay"><b>${title}</b>
+      ${HAS_CASH ? `<div class="way"><span>Cash App <strong>${esc(CASHTAG)}</strong></span><a class="btn cash" href="${cashUrl()}" target="_blank" rel="noopener">Open Cash App</a></div>` : ""}
+      ${ZELLE ? `<div class="way"><span>Zelle <strong>${esc(ZELLE)}</strong></span><button class="btn ghost" type="button" data-copy="${esc(ZELLE)}">Copy</button></div>` : ""}
+      <span class="hint">Put your booking number in the note so we know it's you.</span></div>`;
+  }
   // Google Sheets backend: plain-text POST keeps it a simple cross-site request.
   async function gs(action, payload) {
     try {
@@ -919,11 +938,13 @@ img { max-width: 100%; }
       ${s.submitError ? `<div class="note" style="background:var(--red-soft)">${esc(s.submitError)}</div>` : ""}
       <span class="hint">${needsDeposit(svc)
         ? `A ${money(DEP.deposit)} deposit holds your spot. It comes off what you owe after the job. ${depositRule()} You'll pay on Stripe's secure checkout page.`
-        : "No payment is taken now. You pay after the job is done. Free to cancel or reschedule from My appointments."}</span>`;
+        : "No payment is taken now. You pay after the job is done. Free to cancel or reschedule from My appointments."}</span>
+      ${!svc.quote ? payBox("After the job, you can pay with") : ""}`;
     } else if (s.step === 4) {
       const a = appts.find(x => x.ref === s.ref);
       body = `<div class="done"><div class="tick">✓</div><h2>${s.rescheduled ? "Appointment moved" : svc.quote ? "Quote visit booked" : "You're booked"}</h2>
-        <p>Gilmore Cleaning Services will text ${esc(s.contact.phone)} to confirm before the visit.</p></div>${apptCard(a, false)}`;
+        <p>Gilmore Cleaning Services will text ${esc(s.contact.phone)} to confirm before the visit.</p></div>${apptCard(a, false)}
+        ${!svc.quote && a ? payBox(`Pay after the job · booking ${a.ref}`) : ""}`;
     }
 
     const steps = s.step < 4 && !s.reschedule ? `<div class="steps">${[0, 1, 2, 3].map(i => `<div class="${i <= s.step ? "on" : ""}"></div>`).join("")}</div>
@@ -1082,6 +1103,7 @@ img { max-width: 100%; }
           : `<div class="acts"><button class="btn ghost" data-resched="${a.ref}" type="button">Reschedule</button><button class="btn ghost" data-cancel="${a.ref}" type="button" style="color:var(--red)">Cancel</button></div>`;
       } else {
         acts = `<div class="acts"><button class="btn ghost" data-again="${a.ref}" type="button">Book again</button></div>`;
+        if (past && a.status !== "cancelled" && !a.quote) acts = payBox(`Pay for booking ${a.ref}`) + acts;
       }
     }
     return `<div class="appt${a.status === "cancelled" ? " cancelled" : ""}">
@@ -1121,8 +1143,22 @@ img { max-width: 100%; }
   }
 
   // ---------- events ----------
+  if (HAS_PAY) {
+    const ways = [HAS_CASH && "Cash App", ZELLE && "Zelle"].filter(Boolean);
+    document.getElementById("pay-ways").textContent = "After the job · " + ways.join(" or ");
+    const foot = document.getElementById("pay-foot");
+    foot.textContent = "Pay after the job with " + [HAS_CASH && "Cash App " + CASHTAG, ZELLE && "Zelle " + ZELLE].filter(Boolean).join(" or ") + ".";
+    foot.hidden = false;
+  }
+
   document.addEventListener("click", ev => {
     const t = ev.target;
+    const copy = t.closest("[data-copy]");
+    if (copy) {
+      const done = () => { copy.textContent = "Copied"; setTimeout(() => { copy.textContent = "Copy"; }, 1500); };
+      if (navigator.clipboard) navigator.clipboard.writeText(copy.dataset.copy).then(done, () => {});
+      return;
+    }
     const book = t.closest("[data-book]");
     if (book) {
       startBooking(book.dataset.book, book.dataset.opt);
