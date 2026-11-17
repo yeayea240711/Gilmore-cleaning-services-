@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Book lawn care, house cleaning, windows, car detailing, pressure washing, trash can and pet waste services with Gilmore Cleaning Services.">
+<meta name="description" content="Book snow removal, lawn care, house cleaning, windows, car detailing, pressure washing, trash can and pet waste services with Gilmore Cleaning Services.">
 <title>Gilmore Cleaning Services</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -102,6 +102,8 @@ section.svc { padding-block: 26px 6px; scroll-margin-top: 120px; }
 
 .grid { display: grid; gap: 14px; }
 .g4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 700px) { .g3 { grid-template-columns: minmax(0, 1fr); } }
 .g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (max-width: 860px) { .g4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 560px) { .g2 { grid-template-columns: minmax(0, 1fr); } }
@@ -380,6 +382,7 @@ img { max-width: 100%; }
       <button class="mybook" id="mybook" type="button">My appointments <span class="count num" id="mycount">0</span></button>
     </div>
     <nav class="chips" aria-label="Services">
+      <a class="chip" href="#snow">Snow removal</a>
       <a class="chip" href="#lawn">Lawn care</a>
       <a class="chip" href="#house">House cleaning &amp; moving</a>
       <a class="chip" href="#windows">Windows</a>
@@ -445,6 +448,34 @@ img { max-width: 100%; }
         <p>Mr. Earl had to turn his hearing aid all the way up for this one. Couches moved, lawns cut, windows shining: we take care of the work so you can sit back with a lemonade.</p>
         <p><b>Tell 'em Earl sent ya.</b></p>
         <button class="btn" type="button" data-nav="pick">Book now</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Snow -->
+  <section class="svc c-blue" id="snow">
+    <div class="sec-head"><span class="eyebrow">Snow removal</span><span class="tags"><span class="tag">New this winter</span><span class="tag">Intro prices</span></span></div>
+    <div class="grid g3" id="snow-grid"></div>
+    <div class="grid g2" id="snow-plans" style="margin-top:14px"></div>
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card soft-blue">
+        <span class="panel-title">Every visit includes</span>
+        <ul class="checks">
+          <li>Driveway cleared edge to edge</li>
+          <li>Front walk, steps &amp; porch shoveled</li>
+          <li>Snow pushed clear of the garage and curb cut</li>
+          <li>Done by hand and snow blower</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="panel-title">Add-ons &amp; good to know</span>
+        <div class="rows num">
+          <div class="hl">Salt / ice melt <b>+$10</b></div>
+          <div>Brush off &amp; clear around 1 car <b>+$10</b></div>
+          <div>Heavy snow (over 6 in.) <b>+$15</b></div>
+          <div class="hg">Winter plans include salt <b>Dec – Mar</b></div>
+        </div>
+        <div class="foot"><span class="hint">Book ahead of a storm and we'll come as soon as it stops.</span><button class="link" data-book="snow" data-opt="snow-s">Book a visit</button></div>
       </div>
     </div>
   </section>
@@ -613,6 +644,20 @@ img { max-width: 100%; }
 
   // Service catalog from the Gilmore Instagram menus. dur = minutes the crew blocks on the calendar.
   const SERVICES = {
+    snow: { name: "Snow Removal", cat: "Snow removal",
+      options: [
+        { id: "snow-walk", label: "Walks & Steps", sub: "Front walk, steps & porch", desc: "No driveway, or you just need a path cleared.", price: 25, dur: 30 },
+        { id: "snow-s", label: "Small Driveway", sub: "1–2 cars + front walk", desc: "Typical single or double driveway, walk and steps.", price: 40, dur: 45 },
+        { id: "snow-l", label: "Large Driveway", sub: "3+ cars or long drive + walks", desc: "Wide, long or corner-lot driveways and sidewalks.", price: 60, dur: 75 },
+        { id: "snow-plan-s", label: "Winter Plan · Small", sub: "Every 2 in.+ snowfall, Dec–Mar", desc: "Small driveway + walk, salt included. We come automatically.", price: 349, plan: true, noAddons: true, dur: 30 },
+        { id: "snow-plan-l", label: "Winter Plan · Large", sub: "Every 2 in.+ snowfall, Dec–Mar", desc: "Large driveway + walks, salt included. We come automatically.", price: 499, plan: true, noAddons: true, dur: 30 }
+      ],
+      addons: [
+        { id: "salt", label: "Salt / ice melt", price: 10 },
+        { id: "car", label: "Brush off & clear around 1 car", price: 10 },
+        { id: "heavy", label: "Heavy snow (over 6 in.)", price: 15 }
+      ],
+      note: "Snow prices cover up to 6 inches. For a Winter Plan, the time you pick is a quick visit to look at your driveway. After that we come after every snowfall of 2 inches or more, December through March, without you booking again." },
     lawn: { name: "Lawn Care", cat: "Professional lawn care",
       options: [
         { id: "lawn-s", label: "Small Yard", sub: "Up to 5,000 sq ft", desc: "Standard residential lot size. Mowing & edging.", price: 40, dur: 45 },
@@ -806,6 +851,13 @@ img { max-width: 100%; }
       `<div class="card${o.mint ? " mint" : ""}"><h3>${o.label}</h3><p class="desc">${o.sub}</p>
        <div class="foot"><span class="price num">${money(o.price)}</span><button class="link"${o.mint ? ' style="color:var(--green)"' : ""} data-book="windows" data-opt="${o.id}">Book</button></div></div>`);
   });
+  const snowGrid = document.getElementById("snow-grid");
+  const snowPlans = document.getElementById("snow-plans");
+  SERVICES.snow.options.forEach(o => {
+    (o.plan ? snowPlans : snowGrid).insertAdjacentHTML("beforeend",
+      `<div class="card${o.plan ? " soft-blue" : ""}"><h3>${o.label}</h3><span class="sub" style="color:var(--blue)">${o.sub}</span><p class="desc">${o.desc}</p>
+       <div class="foot"><span class="price num">${money(o.price)}${o.plan ? "<small>per season</small>" : "<small>per visit</small>"}</span><button class="link" data-book="snow" data-opt="${o.id}">Book</button></div></div>`);
+  });
 
   // ---------- sheet ----------
   const root = document.getElementById("sheet-root");
@@ -845,14 +897,14 @@ img { max-width: 100%; }
   const currentDur = () => currentOpt().dur;
   function pricing() {
     const o = currentOpt();
-    const addons = (state.svc.addons || []).filter(a => state.addons.includes(a.id));
+    const addons = o.noAddons ? [] : (state.svc.addons || []).filter(a => state.addons.includes(a.id));
     if (state.svc.quote) {
       const label = o.high ? `${money(o.low)} – ${money(o.high)}` : `From ${money(o.low)}`;
       return { label, addons, estimate: true };
     }
     const base = o.unit ? o.unit * state.qty : o.price;
     const total = base + addons.reduce((s, a) => s + a.price, 0);
-    return { addons, label: (o.from ? "From " : "") + money(total), estimate: !!o.from };
+    return { addons, label: (o.from ? "From " : "") + money(total) + (o.plan ? " per season" : ""), estimate: !!o.from };
   }
 
   function timeStep() {
@@ -894,7 +946,7 @@ img { max-width: 100%; }
       body += svc.note ? `<div class="note">${svc.note}</div>` : "";
       body += `<div class="group"><span class="lbl">${svc.quote ? "What needs washing?" : "Option"}</span>` +
         svc.options.map(x => {
-          const price = svc.quote ? (x.high ? `$${x.low}–$${x.high}` : `From $${x.low}`) : x.unit ? `${money(x.unit)}/ea` : (x.from ? "From " : "") + money(x.price);
+          const price = svc.quote ? (x.high ? `$${x.low}–$${x.high}` : `From $${x.low}`) : x.unit ? `${money(x.unit)}/ea` : (x.from ? "From " : "") + money(x.price) + (x.plan ? "/season" : "");
           return `<label class="opt${x.id === s.optId ? " on" : ""}"><input type="radio" name="opt" value="${x.id}" ${x.id === s.optId ? "checked" : ""}>
             <span class="t"><b>${x.label}</b><span>${x.sub} · ${svc.quote ? "Free visit, " : ""}${fmtDur(x.dur)}</span></span><span class="p num">${price}</span></label>`;
         }).join("") + `</div>`;
@@ -903,7 +955,7 @@ img { max-width: 100%; }
           <div class="stepper"><button type="button" data-q="-1" aria-label="Fewer">−</button><output class="num">${s.qty}</output><button type="button" data-q="1" aria-label="More">+</button>
           <span class="hint num">${s.qty} × ${money(o.unit)} = ${money(o.unit * s.qty)}</span></div></div>`;
       }
-      if (svc.addons) {
+      if (svc.addons && !o.noAddons) {
         body += `<div class="group"><span class="lbl">Add-ons</span>` + svc.addons.map(a =>
           `<label class="opt${s.addons.includes(a.id) ? " on" : ""}"><input type="checkbox" name="addon" value="${a.id}" ${s.addons.includes(a.id) ? "checked" : ""}>
             <span class="t"><b>${a.label}</b></span><span class="p num">+${money(a.price)}</span></label>`).join("") + `</div>`;
