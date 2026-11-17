@@ -11,9 +11,9 @@
  * Every booking, reschedule and cancel is emailed to OWNER_EMAIL
  * (left blank, that's the Google account that deployed this script).
  *
- * Deposits (optional): fill in STRIPE_PAYMENT_LINK and STRIPE_SECRET_KEY below, then pick
+ * Deposits are turned OFF: leave STRIPE_PAYMENT_LINK and STRIPE_SECRET_KEY blank ('') and every
+ * booking goes straight through with no payment hold. To turn them back on, fill both in, then pick
  * setupDeposits in the function menu at the top and press Run once (see README).
- * Left blank, bookings work as before with no deposit.
  *
  * Customers can also send the deposit by Cash App or Zelle (set in config.js). Those don't
  * report back, so you get an email to check for it and tap "Mark deposit paid" on the owner page.

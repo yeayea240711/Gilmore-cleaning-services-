@@ -30,13 +30,15 @@ Business hours are Mon–Sat, 8:00 AM to 6:00 PM. To change them, edit `OPEN_MIN
 
 If you change `Code.gs` later, use **Deploy → Manage deployments → Edit → New version** so the link stays the same.
 
-## Deposits (optional)
+## Deposits (turned off)
 
-Customers pay a $20 deposit on Stripe's secure checkout page to hold their time. Nobody types card details into this site. The deposit comes off the bill after the job. If a customer cancels more than 24 hours ahead you get an email saying to refund it; closer than that, you keep it. Free quote visits don't need a deposit. An unpaid booking gives its time back after 30 minutes.
+Deposits are **off**: customers book straight away with no payment up front, and you get a **New booking** email for every booking. Customers pay the balance after the job by card, Cash App or Zelle (set in `config.js`).
 
-You only get the **New booking** email once the deposit is paid. The Sheet's **Deposit** column and the owner page show where each one stands.
+To turn them off, the `STRIPE_PAYMENT_LINK` and `STRIPE_SECRET_KEY` lines in the Apps Script are left empty (`''`). The site reads that from the script and hides every deposit step on its own. You can also delete the **sweepDeposits** trigger in Apps Script (clock icon), since it has nothing left to check.
 
-To turn it on:
+If you ever want a $20 deposit back, here's how it worked: customers paid on Stripe's secure checkout page to hold their time, it came off the bill after the job, and cancelling more than 24 hours ahead got a refund. An unpaid booking gave its time back after 30 minutes.
+
+To turn them back on:
 
 1. **Make the payment link.** In Stripe, open **Payment Links → New**. Add a product named **Booking deposit** with a one-time price of **$20**. Under **After payment**, pick **Don't show confirmation page** and enter `https://yeayea240711.github.io/Gilmore-cleaning-services-/?deposit=paid#appointments`. Create it and copy the link (it starts with `https://buy.stripe.com/`).
 2. **Make a read-only key.** In Stripe, open **Developers → API keys → Create restricted key**. Name it **Gilmore Bookings**, set **Checkout Sessions** to **Read**, leave everything else as **None**, and create it. Copy the key (it starts with `rk_live_`).
